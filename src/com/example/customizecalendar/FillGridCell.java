@@ -64,9 +64,9 @@ public class FillGridCell {
 
 		//閏年2月多一天
 		if (cal.isLeapYear(cal.get(Calendar.YEAR)))
-			if (mMonth == 2)
+			if (mMonth == 1)
 				++daysInMonth;
-			else if (mMonth == 3)
+			else if (mMonth == 2)
 				++daysInPrevMonth;
 
 		// list先放上個月的資料到trailingSpaces
@@ -74,13 +74,20 @@ public class FillGridCell {
 			HashMap<String, String> item = new HashMap<String ,String >() ;
 			item.put("dayNum", String.valueOf(
 					(daysInPrevMonth - trailingSpaces + DAY_OFFSET) + i));
+			item.put("color", "Gray");
 			list.add (item);
 		}
 
 		// 接下來放本月資料
+		int today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
 		for (int i = 1; i <= daysInMonth; i++) {
 			HashMap<String, String> item = new HashMap<String ,String >() ;
 			item.put("dayNum", String.valueOf(i));
+			if (i == today) {
+				item.put("color", "Blue");  //今天的字體是藍色
+			} else {
+				item.put("color", "Black");  //本月其它天是黑色字體
+			}
 			list.add (item);
 		}
 
@@ -88,6 +95,7 @@ public class FillGridCell {
 		for (int i = 0; i < list.size() % 7; i++) {
 			HashMap<String, String> item = new HashMap<String ,String >() ;
 			item.put("dayNum", String.valueOf(i + 1));
+			item.put("color", "Gray");
 			list.add (item);
 		}
 		

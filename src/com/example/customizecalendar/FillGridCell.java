@@ -9,16 +9,12 @@ import android.util.Log;
 /* 這個class是用來設置要畫在GridView上的日期
  * 根據設置的年與月,來決定每格要填什麼數字 */
 public class FillGridCell {
-	private String TAG = "FillGridCell";
+	private String TAG = "Dean";
 	
 	private int mYear;
 	private int mMonth;
-	private ArrayList<HashMap<String, String>> list = new ArrayList<HashMap <String ,String>>();
-	//private List<String> item;
 	private static final int DAY_OFFSET = 1;	
 	private int daysInMonth;
-	private int currentDayOfMonth;
-	
 	
 	/* 預設今天的年,月 */
 	public FillGridCell() {
@@ -32,7 +28,13 @@ public class FillGridCell {
 		this.mMonth = month;
 	}
 	
+	public void setDate(int year, int month) {
+		this.mYear = year;
+		this.mMonth = month;
+	}
+	
 	public ArrayList<HashMap<String, String>> getGridList() {
+		ArrayList<HashMap<String, String>> list = new ArrayList<HashMap <String ,String>>();
 		int trailingSpaces = 0;    //需要填幾筆上個月的資料
 		int daysInPrevMonth = 0;   //上個月有幾天
 		int prevMonth = 0;         //上個月是幾月
@@ -111,7 +113,4 @@ public class FillGridCell {
 		return weekdays[i];
 	}
 	
-	public int getCurrentDayOfMonth() {
-		return currentDayOfMonth;
-	}
 }

@@ -38,6 +38,9 @@ public class FillGridCell {
 		int trailingSpaces = 0;    //需要填幾筆上個月的資料
 		int daysInPrevMonth = 0;   //上個月有幾天
 		int prevMonth = 0;         //上個月是幾月
+		int prevYear = 0;
+		int nextMonth = 0;
+		int nextYear = 0;
 		int currentMonth = mMonth; //這個月
 		daysInMonth = getNumberOfDaysOfMonth(currentMonth);
 		Log.d(TAG, "本月有" + daysInMonth + "天");
@@ -47,12 +50,21 @@ public class FillGridCell {
 		//取得上個月的天數資訊
 		if (currentMonth == 11) { //假如現在是12月
 			prevMonth = currentMonth - 1;
+			prevYear = mYear;
 			daysInPrevMonth = getNumberOfDaysOfMonth(prevMonth);
+			nextMonth = 0;
+			nextYear = mYear + 1;
 		} else if (currentMonth == 0) {  //假如現在是1月
 			prevMonth = 11;
+			prevYear = mYear - 1;
 			daysInPrevMonth = getNumberOfDaysOfMonth(prevMonth);
+			nextMonth = currentMonth + 1;
+			nextYear = mYear;
 		} else {
 			prevMonth = currentMonth - 1;
+			nextMonth = currentMonth + 1;
+			nextYear = mYear;
+			prevYear = mYear;
 			daysInPrevMonth = getNumberOfDaysOfMonth(prevMonth);
 		}
 		//取得本月一號是禮拜幾(1代表星期日),根據這個決定要填幾筆上個月的資料
@@ -74,6 +86,8 @@ public class FillGridCell {
 			HashMap<String, String> item = new HashMap<String ,String >() ;
 			item.put("dayNum", String.valueOf(
 					(daysInPrevMonth - trailingSpaces + DAY_OFFSET) + i));
+			item.put("year", String.valueOf(prevYear));
+			item.put("month", String.valueOf(prevMonth));
 			item.put("color", "Gray");
 			list.add (item);
 		}
@@ -83,6 +97,8 @@ public class FillGridCell {
 		for (int i = 1; i <= daysInMonth; i++) {
 			HashMap<String, String> item = new HashMap<String ,String >() ;
 			item.put("dayNum", String.valueOf(i));
+			item.put("year", String.valueOf(mYear));
+			item.put("month", String.valueOf(mMonth));
 			if (i == today) {
 				item.put("color", "Blue");  //今天的字體是藍色
 			} else {
@@ -95,6 +111,8 @@ public class FillGridCell {
 		for (int i = 0; i < list.size() % 7; i++) {
 			HashMap<String, String> item = new HashMap<String ,String >() ;
 			item.put("dayNum", String.valueOf(i + 1));
+			item.put("year", String.valueOf(nextYear));
+			item.put("month", String.valueOf(nextMonth));
 			item.put("color", "Gray");
 			list.add (item);
 		}

@@ -1,23 +1,16 @@
 package com.example.customizecalendar;
 
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.GridView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener {
@@ -33,12 +26,15 @@ public class MainActivity extends Activity implements OnClickListener {
 	private TextView prevMon;
 	private TextView nextMon;
 	private TextView dateView;
+	private Button btn_AddEvent;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		btn_AddEvent = (Button) findViewById(R.id.btn_addEvent);
+		btn_AddEvent.setOnClickListener(this);
 		myCalendarView = (GridView) findViewById(R.id.myCalendar);
 		mWeekDays = (TextView) findViewById(R.id.weekDay);
 		mWeekDays.setText("Sun        Mon        Tue        Wed        Thu        Fri        Sat");
@@ -68,6 +64,11 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	@Override
 	public void onClick(View v) {
+		if (v == btn_AddEvent) {
+			Log.i(TAG, "addEvent");
+			showAddEventInterface();
+			return;
+		}
 		if (v == prevMon) {
 			Log.i(TAG, "Chnage to previous month");
 			if (mMonthOfToday == 0) {
@@ -119,64 +120,25 @@ public class MainActivity extends Activity implements OnClickListener {
 				+ String.valueOf(month + 1) + "-"
 				+ String.valueOf(day));
 	}
-
-	public class NoteAdapter extends SimpleAdapter{
-		Context context = null;
- 
-		/* 重設GridView的外觀
-		 * 修改TextView的大小,增加點選範圍
-		 * 設定TextView背景顏色,與GridView的background不同顏色產生格線效果
-		 * */
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			// 取得TextView
-			convertView = LayoutInflater.from(context).inflate(R.layout.gridcell, null);
-			TextView txtNote = (TextView)convertView.findViewById(R.id.num);
-			
-			HashMap<String, String> theMap = (HashMap<String, String>)getItem(position);
-			setTextColor(txtNote, theMap.get("color").toString() , position);
-			txtNote.setText(theMap.get("dayNum").toString());
-			txtNote.setTextSize(24);			
-			txtNote.setBackgroundColor(Color.WHITE);// textView背景白色
- 
-			/* 根据列数计算TextView宽度，以使总宽度尽量填充屏幕
-			 * 會影響到background與點擊範圍
-			 * 每格寬度 = (總寬度 - 格線數*線數間距) / 數
-			 */
-			int itemWidth = (int)(getResources().getDisplayMetrics().widthPixels -  6 * 2)  / 7;
-			int itemHeight = itemWidth;
-		    AbsListView.LayoutParams param = new AbsListView.LayoutParams(
-		    		itemWidth,
-		    		itemHeight);
-		    txtNote.setLayoutParams(param);
- 
-		    return txtNote;
-		}
+	
+	private void showAddEventInterface() {
+		Intent intent = new Intent();
+		intent.setClass(MainActivity.this, AddEvent.class);
 		
-		/* 設定TextView字體顏色 */
-		private void setTextColor(TextView view, String color, int position) {
-			Boolean hoilday = false;
-			if ((position % 7 == 0) || (position % 7 == 6))
-				hoilday = true;
+		startActivityForResult(intent, 0);
+	}
+	
+	/* 接收回傳的值 */
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode == RESULT_CANCELED) {
+			Log.v(TAG, "Give up to add a new event");
+		} else if (resultCode == RESULT_OK) {
+			Bundle bundle = data.getBundleExtra("com.example.customizecalendar.AddEvent");
+			String event_title = bundle.getString("title");
 			
-			if (color.equals("Black")) {
-				if (hoilday)
-					view.setTextColor(getResources().getColor(R.color.red));
-				else
-					view.setTextColor(getResources().getColor(R.color.black));
-			} else if (color.equals("Gray")) {
-				view.setTextColor(getResources().getColor(R.color.lightgray));
-			} else if (color.equals("Blue")) {
-				view.setTextColor(getResources().getColor(R.color.blue));
-			}
+			Log.v(TAG, "Title " + event_title);
 		}
-		 
-		public NoteAdapter(Context context,
-				List<? extends Map<String, ?>> data, int resource,
-				String[] from, int[] to) {
-			super(context, data, resource, from, to);
-			this.context = context;
-		}
- 
 	}
 }

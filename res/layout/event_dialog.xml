@@ -2,84 +2,112 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
-    
-	<TableLayout
-	    android:layout_width="match_parent"
-	    android:layout_height="126dp"
-	    android:stretchColumns="1,2" >
-	    
-	    <TableRow>
-		    <TextView
-		        android:id="@+id/text_title"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:text="Title:" />
-		    <EditText
-		        android:id="@+id/title"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:layout_span="2"
-		        android:ems="10" >
-		    </EditText>
-		</TableRow>
-		
-	    <TableRow>
-		    <TextView
-		        android:id="@+id/text_startTime"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:text="Start Time:" />
+    android:orientation="vertical" >
 
-		    <TextView
-		        android:id="@+id/start_date"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-            	android:clickable="true"
-		        android:text="TextView" />
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:stretchColumns="1,2" >
 
-		    <TextView
-		        android:id="@+id/start_time"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-            	android:clickable="true"
-		        android:text="TextView" />
+        <TableRow>
+            <TextView
+                android:id="@+id/text_calendar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Calendar:" />
 
-	    </TableRow>
-	    
-	    <TableRow>
-		    <TextView
-		        android:id="@+id/text_endTime"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:text="End Time:" />
+            <Spinner
+                android:id="@+id/calendar_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_span="2" />
+        </TableRow>
 
-		    <TextView
-		        android:id="@+id/end_date"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:text="TextView" />
+        <TableRow>
+            <TextView
+                android:id="@+id/text_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Title:" />
 
-		    <TextView
-		        android:id="@+id/end_time"
-		        android:layout_width="wrap_content"
-		        android:layout_height="wrap_content"
-		        android:text="TextView" />
+            <EditText
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_span="2"
+                android:ems="10" >
+            </EditText>
+        </TableRow>
 
-		</TableRow>
+        <TableRow>
+            <TextView
+                android:id="@+id/text_startTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Start Time:" />
 
-	</TableLayout>
+            <TextView
+                android:id="@+id/start_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:text="TextView" />
 
-	<Button
-	    android:id="@+id/btn_ok"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:text="OK" />
+            <TextView
+                android:id="@+id/start_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:text="TextView" />
+        </TableRow>
 
-	<Button
-	    android:id="@+id/btn_cancel"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:text="Cancel" />
+        <TableRow>
+            <TextView
+                android:id="@+id/text_endTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="End Time:" />
+
+            <TextView
+                android:id="@+id/end_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView" />
+
+            <TextView
+                android:id="@+id/end_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView" />
+        </TableRow>
+        
+        <TableRow>
+            <TextView
+                android:id="@+id/text_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Description" />
+
+            <EditText
+                android:id="@+id/edit_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_span="2"
+                android:ems="20" >
+            </EditText>
+        </TableRow>
+    </TableLayout>
+
+    <Button
+        android:id="@+id/btn_ok"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="OK" />
+
+    <Button
+        android:id="@+id/btn_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancel" />
 
 </LinearLayout>

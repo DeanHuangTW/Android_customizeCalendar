@@ -8,9 +8,13 @@ import java.util.HashMap;
 import com.example.customizecalendar.DayEvent;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.CalendarContract.Events;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -190,29 +194,9 @@ public class MainActivity extends Activity implements OnClickListener {
 			Log.v(TAG, "Give up to add a new event");
 		} else if (resultCode == RESULT_OK) {
 			Bundle bundle = data.getBundleExtra("com.example.customizecalendar.AddEvent");
-			String event_title = bundle.getString("title");			
-			Log.v(TAG, "Title " + event_title);
-			String[] start = bundle.getStringArray("startTime");
-			Calendar startCalendar = getStartCalendar(start);
-			
+			Long evenId = bundle.getLong("eventID");
+			Log.i(TAG, "Add a new event. ID: " + evenId);
 		}
 	}
 	
-	private Calendar getStartCalendar(String[] timeString) {
-		Calendar cal = Calendar.getInstance();
-		cal.set(Integer.valueOf(timeString[0]) , 
-				Integer.valueOf(timeString[1]), 
-				Integer.valueOf(timeString[2]), 
-				Integer.valueOf(timeString[3]), 
-				Integer.valueOf(timeString[4]));
-		
-		Log.v(TAG, "calendar time: " + 
-				cal.get(Calendar.YEAR) + "/" +
-				(cal.get(Calendar.MONTH) + 1) + "/" +
-				cal.get(Calendar.DAY_OF_MONTH) + "  " +
-				cal.get(Calendar.HOUR_OF_DAY) + ":" +
-				cal.get(Calendar.MINUTE));
-		
-		return cal;
-	}
 }

@@ -1,9 +1,15 @@
 package com.example.customizecalendar;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+
+import com.example.customizecalendar.DayEvent;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,6 +17,8 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener {
@@ -27,6 +35,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	private TextView nextMon;
 	private TextView dateView;
 	private Button btn_AddEvent;
+	private ListView mEventList;
+	private SimpleAdapter adapter;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +53,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		nextMon = (TextView) findViewById(R.id.nextMonth);
 		nextMon.setOnClickListener(this);
 		dateView = (TextView) findViewById(R.id.date);
+		mEventList = (ListView) findViewById(R.id.eventList);
 		
+		// 預設的畫面
 		Calendar calendar = getTodayCalendar();		
 		
 		FillGridCell gridCell = new FillGridCell();
@@ -56,7 +68,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			@Override
 			public void onItemClick(AdapterView adapterView,View view,int position,long id) {
 				Log.i(TAG, "press position:" + position);
-				gridClick(view, position);
+				gridClick(adapterView, view, position);
 			}
 		});
 		
@@ -64,11 +76,14 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	@Override
 	public void onClick(View v) {
+		// 新增event
 		if (v == btn_AddEvent) {
 			Log.i(TAG, "addEvent");
 			showAddEventInterface();
 			return;
 		}
+		
+		//月份切換
 		if (v == prevMon) {
 			Log.i(TAG, "Chnage to previous month");
 			if (mMonthOfToday == 0) {
@@ -91,6 +106,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		setDateView(mYearOfToday, mMonthOfToday, mDayOfToday);
 	}
 	
+	// 月份切換後,更新GridView
 	private void updateGridView(int year, int month) {
 		FillGridCell gridCell = new FillGridCell(year, month);
 		NoteAdapter adapter = new NoteAdapter(this, 
@@ -99,11 +115,48 @@ public class MainActivity extends Activity implements OnClickListener {
 		myCalendarView.setAdapter(adapter);
 	}
 	
-	private void gridClick(View view, int position) {
-		TextView txtNote = (TextView)view.findViewById(R.id.num);
+	// 點選GridView上的日期
+	private void gridClick(AdapterView adapter, View view, int position) {
+		//TextView txtNote = (TextView)view.findViewById(R.id.num);
+		HashMap<String, String> theMap = (HashMap<String, String>)adapter.getItemAtPosition(position);
+		int year = Integer.valueOf(theMap.get("year"));
+		int month = Integer.valueOf(theMap.get("month"));
+		int day = Integer.valueOf(theMap.get("dayNum"));
+		setDateView(year, month, day);
 		
+		DayEvent dm = new DayEvent(year, month, day);
+    	Cursor cur = dm.queryTodayEvent(getContentResolver());
+    	showDayEvents(cur);
 	}
 	
+	// add events to ListView
+	private void showDayEvents(Cursor cur) {
+		ArrayList<HashMap<String,String>> list = new ArrayList<HashMap<String,String>>();
+		while (cur.moveToNext()) {
+		    long eventID = cur.getLong(DayEvent.PROJ_ID_INDEX);
+		    long beginVal = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);
+		    String title = cur.getString(DayEvent.PROJ_TITLE_INDEX);
+		    
+		    Calendar calendar = Calendar.getInstance();
+		    calendar.setTimeInMillis(beginVal);
+		    SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+
+		    HashMap<String,String> item = new HashMap<String,String>();
+		    item.put("ID", String.valueOf(eventID)); // ID will not shown in ListView
+		    item.put("Title", title);
+		    item.put("startTime", formatter.format(calendar.getTime()));
+		    list.add(item);
+		}
+		adapter = new SimpleAdapter(this, 
+			list,
+			android.R.layout.simple_list_item_2,
+			new String[] { "Title","startTime" },
+			new int[] {android.R.id.text1, android.R.id.text2});
+				 
+		//ListActivity設定adapter
+		mEventList.setAdapter(adapter);
+	}
+		
 	private Calendar getTodayCalendar() {
 		Calendar calendar = Calendar.getInstance();
 		mYearOfToday = calendar.get(Calendar.YEAR);
@@ -121,6 +174,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				+ String.valueOf(day));
 	}
 	
+	// 跳到新增event窗口
 	private void showAddEventInterface() {
 		Intent intent = new Intent();
 		intent.setClass(MainActivity.this, AddEvent.class);
@@ -136,9 +190,29 @@ public class MainActivity extends Activity implements OnClickListener {
 			Log.v(TAG, "Give up to add a new event");
 		} else if (resultCode == RESULT_OK) {
 			Bundle bundle = data.getBundleExtra("com.example.customizecalendar.AddEvent");
-			String event_title = bundle.getString("title");
-			
+			String event_title = bundle.getString("title");			
 			Log.v(TAG, "Title " + event_title);
+			String[] start = bundle.getStringArray("startTime");
+			Calendar startCalendar = getStartCalendar(start);
+			
 		}
+	}
+	
+	private Calendar getStartCalendar(String[] timeString) {
+		Calendar cal = Calendar.getInstance();
+		cal.set(Integer.valueOf(timeString[0]) , 
+				Integer.valueOf(timeString[1]), 
+				Integer.valueOf(timeString[2]), 
+				Integer.valueOf(timeString[3]), 
+				Integer.valueOf(timeString[4]));
+		
+		Log.v(TAG, "calendar time: " + 
+				cal.get(Calendar.YEAR) + "/" +
+				(cal.get(Calendar.MONTH) + 1) + "/" +
+				cal.get(Calendar.DAY_OF_MONTH) + "  " +
+				cal.get(Calendar.HOUR_OF_DAY) + ":" +
+				cal.get(Calendar.MINUTE));
+		
+		return cal;
 	}
 }

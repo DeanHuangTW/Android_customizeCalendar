@@ -62,6 +62,7 @@ public class DayEvent {
 
 	// query today's event
 	public Cursor queryTodayEvent(ContentResolver cr) {
+		Log.i(TAG, "Query event " + mYear + "/" + (mMonth + 1) + "/" + mDay);
 		Calendar beginTime = Calendar.getInstance();
 		beginTime.set(mYear, mMonth, mDay, 0, 0);
 		long startMillis = beginTime.getTimeInMillis();

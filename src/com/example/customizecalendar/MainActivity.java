@@ -73,6 +73,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		
 		// 預設的畫面
 		Calendar calendar = getTodayCalendar();		
+		updateEventList(mYearOfToday, mMonthOfToday, mDayOfToday);
 		
 		FillGridCell gridCell = new FillGridCell();
 		NoteAdapter adapter = new NoteAdapter(this, 
@@ -136,15 +137,14 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	// 點選GridView上的日期
 	private void gridClick(AdapterView adapter, View view, int position) {		
 		HashMap<String, String> theMap = (HashMap<String, String>)adapter.getItemAtPosition(position);
-		mYearOfSelect = Integer.valueOf(theMap.get("year"));
-		mMonthOfSelect = Integer.valueOf(theMap.get("month"));
-		mDayOfSelect = Integer.valueOf(theMap.get("dayNum"));
-		setDateView(mYearOfSelect, mMonthOfSelect, mDayOfSelect);
-		
-		DayEvent dm = new DayEvent(mYearOfSelect, mMonthOfSelect, mDayOfSelect);
-    	Cursor cur = dm.queryTodayEvent(getContentResolver());
-    	showDayEvents(cur);    	
+		int year = Integer.valueOf(theMap.get("year"));
+		int month = Integer.valueOf(theMap.get("month"));
+		int day = Integer.valueOf(theMap.get("dayNum"));
+		setDateView(year, month, day);
+		// 更新ListView
+		updateEventList(year, month, day);		
     	
+    	// 設定點選日期的顏色
 		if (prevClickView != null) {// 恢復顏色			
 			setTextColor(prevClickView, prevColor, prevPos);
 		}
@@ -153,6 +153,39 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		setTextColor(prevClickView, "Orange", position);
 		prevColor = theMap.get("color").toString();
 		prevPos = position;
+	}
+	
+	private void updateEventList(int year, int month, int day) {
+		mYearOfSelect = year;
+		mMonthOfSelect = month;
+		mDayOfSelect = day;
+		DayEvent dm = new DayEvent(year, month, day);
+    	Cursor cur = dm.queryTodayEvent(getContentResolver());
+    	
+    	ArrayList<HashMap<String,String>> list = new ArrayList<HashMap<String,String>>();
+		while (cur.moveToNext()) {
+		    long eventID = cur.getLong(DayEvent.PROJ_ID_INDEX);
+		    long beginVal = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);
+		    String title = cur.getString(DayEvent.PROJ_TITLE_INDEX);
+		    
+		    Calendar calendar = Calendar.getInstance();
+		    calendar.setTimeInMillis(beginVal);
+		    SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+
+		    HashMap<String,String> item = new HashMap<String,String>();
+		    item.put("ID", String.valueOf(eventID)); // ID will not shown in ListView
+		    item.put("Title", title);
+		    item.put("startTime", formatter.format(calendar.getTime()));
+		    list.add(item);
+		}
+		adapter = new SimpleAdapter(this, 
+			list,
+			android.R.layout.simple_list_item_2,
+			new String[] { "Title","startTime" },
+			new int[] {android.R.id.text1, android.R.id.text2});
+				 
+		//ListActivity設定adapter
+		mEventList.setAdapter(adapter);  	
 	}
 	
 	private void eventListClick(int position) {
@@ -176,6 +209,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
     	intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginVal);
     	intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endVal);
     	
+		
     	startActivity(intent);
 	}
 	
@@ -199,35 +233,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 			view.setTextColor(getResources().getColor(R.color.orange));
 		}
 	}
-	
-	// add events to ListView
-	private void showDayEvents(Cursor cur) {
-		ArrayList<HashMap<String,String>> list = new ArrayList<HashMap<String,String>>();
-		while (cur.moveToNext()) {
-		    long eventID = cur.getLong(DayEvent.PROJ_ID_INDEX);
-		    long beginVal = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);
-		    String title = cur.getString(DayEvent.PROJ_TITLE_INDEX);
-		    
-		    Calendar calendar = Calendar.getInstance();
-		    calendar.setTimeInMillis(beginVal);
-		    SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd HH:mm");
-
-		    HashMap<String,String> item = new HashMap<String,String>();
-		    item.put("ID", String.valueOf(eventID)); // ID will not shown in ListView
-		    item.put("Title", title);
-		    item.put("startTime", formatter.format(calendar.getTime()));
-		    list.add(item);
-		}
-		adapter = new SimpleAdapter(this, 
-			list,
-			android.R.layout.simple_list_item_2,
-			new String[] { "Title","startTime" },
-			new int[] {android.R.id.text1, android.R.id.text2});
-				 
-		//ListActivity設定adapter
-		mEventList.setAdapter(adapter);
-	}
-		
+			
 	private Calendar getTodayCalendar() {
 		Calendar calendar = Calendar.getInstance();
 		mYearOfToday = calendar.get(Calendar.YEAR);

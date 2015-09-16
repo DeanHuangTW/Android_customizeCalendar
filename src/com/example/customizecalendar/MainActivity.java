@@ -9,29 +9,36 @@ import com.example.customizecalendar.DayEvent;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-public class MainActivity extends Activity implements OnClickListener {
+public class MainActivity extends Activity implements OnClickListener ,OnItemClickListener {
 	private String TAG = "Dean";
 	
 	// 今天的年,月,日
 	private int mYearOfToday;
 	private int mMonthOfToday;
 	private int mDayOfToday;
+	// 選擇的日期
+	private int mYearOfSelect;
+	private int mMonthOfSelect;
+	private int mDayOfSelect;
 	
 	private GridView myCalendarView;
 	private TextView mWeekDays;
@@ -41,6 +48,10 @@ public class MainActivity extends Activity implements OnClickListener {
 	private Button btn_AddEvent;
 	private ListView mEventList;
 	private SimpleAdapter adapter;
+	//紀錄之前點選的GridView資料
+	private TextView prevClickView;
+	private String prevColor;
+	private int prevPos;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +69,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		nextMon.setOnClickListener(this);
 		dateView = (TextView) findViewById(R.id.date);
 		mEventList = (ListView) findViewById(R.id.eventList);
+		mEventList.setOnItemClickListener(this);
 		
 		// 預設的畫面
 		Calendar calendar = getTodayCalendar();		
@@ -66,17 +78,19 @@ public class MainActivity extends Activity implements OnClickListener {
 		NoteAdapter adapter = new NoteAdapter(this, 
 		    gridCell.getGridList(), R.layout.gridcell, new String[]{"dayNum"},
 		    new int[]{R.id.num});
-		myCalendarView.setAdapter(adapter);
-		
-		myCalendarView.setOnItemClickListener(new GridView.OnItemClickListener(){
-			@Override
-			public void onItemClick(AdapterView adapterView,View view,int position,long id) {
-				Log.i(TAG, "press position:" + position);
-				gridClick(adapterView, view, position);
-			}
-		});
+		myCalendarView.setAdapter(adapter);		
+		myCalendarView.setOnItemClickListener(this);
 		
 	}
+	
+	@Override
+	public void onItemClick(AdapterView adapterView,View view,int position,long id) {
+		if (adapterView == myCalendarView) {
+			gridClick(adapterView, view, position);
+		} else if (adapterView == mEventList) {
+			eventListClick(position);
+		}
+	}	
 	
 	@Override
 	public void onClick(View v) {
@@ -120,17 +134,70 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 	
 	// 點選GridView上的日期
-	private void gridClick(AdapterView adapter, View view, int position) {
-		//TextView txtNote = (TextView)view.findViewById(R.id.num);
+	private void gridClick(AdapterView adapter, View view, int position) {		
 		HashMap<String, String> theMap = (HashMap<String, String>)adapter.getItemAtPosition(position);
-		int year = Integer.valueOf(theMap.get("year"));
-		int month = Integer.valueOf(theMap.get("month"));
-		int day = Integer.valueOf(theMap.get("dayNum"));
-		setDateView(year, month, day);
+		mYearOfSelect = Integer.valueOf(theMap.get("year"));
+		mMonthOfSelect = Integer.valueOf(theMap.get("month"));
+		mDayOfSelect = Integer.valueOf(theMap.get("dayNum"));
+		setDateView(mYearOfSelect, mMonthOfSelect, mDayOfSelect);
 		
-		DayEvent dm = new DayEvent(year, month, day);
+		DayEvent dm = new DayEvent(mYearOfSelect, mMonthOfSelect, mDayOfSelect);
     	Cursor cur = dm.queryTodayEvent(getContentResolver());
-    	showDayEvents(cur);
+    	showDayEvents(cur);    	
+    	
+		if (prevClickView != null) {// 恢復顏色			
+			setTextColor(prevClickView, prevColor, prevPos);
+		}
+		//設定新的View的顏色
+		prevClickView = (TextView)view.findViewById(R.id.num);
+		setTextColor(prevClickView, "Orange", position);
+		prevColor = theMap.get("color").toString();
+		prevPos = position;
+	}
+	
+	private void eventListClick(int position) {
+		Log.v(TAG, "ListView click event");
+    	long endVal = 0, beginVal = 0;
+    	
+    	//Step 1. get event's data according to event ID
+    	HashMap<String,String> data = (HashMap<String,String>)mEventList.getItemAtPosition(position);
+    	int eventId = Integer.parseInt(data.get("ID"));
+    	Log.v(TAG, "event ID " + eventId);
+    	Cursor cur = DayEvent.queryEvntById(getContentResolver(), eventId);            	
+    	while (cur.moveToNext()) { // Only one data
+		    endVal = cur.getLong(DayEvent.PROJ_END_INDEX);
+		    beginVal = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);
+    	}
+    	
+    	//Step 2. Write data to intent and open it.
+    	Uri uri = ContentUris.withAppendedId(Events.CONTENT_URI, eventId);
+    	Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+    	//It will show 1970/1/1 if no set time
+    	intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginVal);
+    	intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endVal);
+    	
+    	startActivity(intent);
+	}
+	
+	private void setTextColor(TextView view, String color, int position) {
+		Boolean hoilday = false;
+		if ((position % 7 == 0) || (position % 7 == 6))
+			hoilday = true;
+		
+		if (color.equals("Black")) {
+			if (hoilday)
+				view.setTextColor(getResources().getColor(R.color.red));
+			else
+				view.setTextColor(getResources().getColor(R.color.black));
+		} else if (color.equals("Gray")) {
+			view.setTextColor(getResources().getColor(R.color.lightgray));
+		} else if (color.equals("Blue")) {
+			view.setTextColor(getResources().getColor(R.color.blue));
+		}
+		
+		if (color.equals("Orange")) {
+			view.setTextColor(getResources().getColor(R.color.orange));
+		}
 	}
 	
 	// add events to ListView
@@ -182,6 +249,12 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void showAddEventInterface() {
 		Intent intent = new Intent();
 		intent.setClass(MainActivity.this, AddEvent.class);
+		
+		Bundle bundle = new Bundle();
+		bundle.putInt("year", mYearOfSelect);
+		bundle.putInt("month", mMonthOfSelect);
+		bundle.putInt("day", mDayOfSelect);
+		intent.putExtras(bundle);
 		
 		startActivityForResult(intent, 0);
 	}

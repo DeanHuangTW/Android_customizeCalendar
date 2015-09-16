@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -18,6 +20,7 @@ import android.provider.CalendarContract.Events;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -34,6 +37,10 @@ public class AddEvent extends Activity implements OnClickListener {
     };
 	private static final int PROJECTION_ID_INDEX = 0;
 	private static final int PROJECTION_DISPLAY_NAME_INDEX = 1;
+	
+	private int[] alarmTimeList = {0, 60, 60*5, 60*10};
+	private int alarmTime = 0;
+	
 	private Button btnOK;
 	private Button btnCancel;
 	private EditText editTitle;
@@ -43,6 +50,7 @@ public class AddEvent extends Activity implements OnClickListener {
 	private TextView end_date;
 	private TextView end_time;
 	private Spinner calendarName;
+	private Spinner spinner_alarm;
 	
 	// 紀錄事件開始與結束時間
 	private int start_year;
@@ -67,11 +75,22 @@ public class AddEvent extends Activity implements OnClickListener {
 		calendarName = (Spinner) findViewById(R.id.calendar_name);	
 		findCalendarList();
 		
+		spinner_alarm = (Spinner) findViewById(R.id.spinner_alarm);
+		spinner_alarm.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
+            public void onItemSelected(AdapterView adapterView, View view, int position, long id){
+            	alarmTime = alarmTimeList[position];
+            }
+            public void onNothingSelected(AdapterView arg0) {                
+            }
+		});
+		setAlarmTimeList();
+		
+		Bundle bundle = getIntent().getExtras();
 		start_date = (TextView) findViewById(R.id.start_date);
 		start_date.setOnClickListener(this);
 		start_time = (TextView) findViewById(R.id.start_time);
 		start_time.setOnClickListener(this);
-		setStartDate();
+		setStartDate(bundle);
 		end_date = (TextView) findViewById(R.id.end_date);
 		end_date.setOnClickListener(this);
 		end_time = (TextView) findViewById(R.id.end_time);
@@ -114,14 +133,14 @@ public class AddEvent extends Activity implements OnClickListener {
 		} else if (v == end_date) {
 			new DatePickerDialog(this,
 					callback_endDatePick,
-					start_year,
-					start_month,
-					start_day).show();
+					end_year,
+					end_month,
+					end_day).show();
 		} else if (v == end_time) {
 			new TimePickerDialog(this,
 					callback_endTimePick,
-                    start_hour,  		
-                    start_minute,
+					end_hour,  		
+					end_minute,
                     true).show();  
 		}
 	}
@@ -181,7 +200,7 @@ public class AddEvent extends Activity implements OnClickListener {
 		Calendar endTime = Calendar.getInstance();
 		endTime.set(end_year, end_month, end_day, end_hour, end_minute);
 		endMillis = endTime.getTimeInMillis();
-		
+			
 		ContentResolver cr = getContentResolver();
 		ContentValues values = new ContentValues();
 		values.put(Events.DTSTART, startMillis);
@@ -191,16 +210,19 @@ public class AddEvent extends Activity implements OnClickListener {
 		values.put(Events.EVENT_TIMEZONE, "Taiwan");
 		values.put(Events.CALENDAR_ID, calendarID);
 		
-		Uri uri = cr.insert(Events.CONTENT_URI, values);
-		
+		Uri uri = cr.insert(Events.CONTENT_URI, values);		
 		long eventID = Long.parseLong(uri.getLastPathSegment());
+		//鬧鐘設置
+		setAlarm(startMillis, eventID);
+		
 		return eventID;
 	}
 	
+	/* 月曆列表 */
 	private void findCalendarList() {
 		Cursor cur = null;
         ContentResolver cr = getContentResolver() ;
-        Uri uri = Calendars .CONTENT_URI;
+        Uri uri = Calendars.CONTENT_URI;
         String selection = "(" + Calendars.ACCOUNT_NAME + " = ?)";
         String[] selectionArgs = {"account_name_local"}; //只用本地月曆
         cur = cr.query(uri, EVENT_PROJECTION, selection, selectionArgs, null);
@@ -219,13 +241,43 @@ public class AddEvent extends Activity implements OnClickListener {
         calendarName.setAdapter(adapter);
 	}
 	
-	private void setStartDate() {
-		Calendar calendar = Calendar.getInstance();
-		start_year = calendar.get(Calendar.YEAR);
-		start_month = calendar.get(Calendar.MONTH);
-		start_day = calendar.get(Calendar.DAY_OF_MONTH);	
+	// 設置鬧鐘, eventID拿來當鬧鐘的unique ID
+	private void setAlarm(long startTime, long eventID) {
+		Intent intent = new Intent(this, AlarmReceiver.class);
+		intent.setData(Uri.parse("custom://customizeCalendar/" + eventID));
+		intent.setAction(String.valueOf(eventID));
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+		
+		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+		am.set(AlarmManager.RTC_WAKEUP, startTime - (alarmTime * 1000), pendingIntent);
+		
+	}
+	
+	private void cancelAlarm(long eventID) {
+		Intent intent = new Intent(this, AlarmReceiver.class);
+		intent.setData(Uri.parse("custom://customizeCalendar/" + eventID));
+		intent.setAction(String.valueOf(eventID));
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, 0);
+		
+		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+		am.cancel(pendingIntent);
+	}
+	
+	/* 鬧鐘時間選項 */
+	private void setAlarmTimeList() {
+		String[] mTimeList = {"不提醒", "1分鐘前", "5分鐘前", "10分鐘前"};
+		ArrayAdapter<String> adapter = new ArrayAdapter<String> (this,
+        		android.R.layout.simple_spinner_item, mTimeList);
+        spinner_alarm.setAdapter(adapter);
+	}
+	
+	private void setStartDate(Bundle bundle) {		
+		start_year = bundle.getInt("year");
+		start_month = bundle.getInt("month");
+		start_day = bundle.getInt("day");
 		start_date.setText(start_year + "/" + (start_month+1) + "/" + start_day);
 		
+		Calendar calendar = Calendar.getInstance();
 		start_hour = calendar.get(Calendar.HOUR_OF_DAY);
 		start_minute = calendar.get(Calendar.MINUTE);
 		start_time.setText(start_hour + ":" + start_minute);
@@ -235,10 +287,11 @@ public class AddEvent extends Activity implements OnClickListener {
 		end_year = start_year;
 		end_month = start_month;
 		end_day = start_day;	
-		end_date.setText(start_year + "/" + (start_month+1) + "/" + start_day);
+		end_date.setText(end_year + "/" + (end_month+1) + "/" + end_day);
 		
+		Calendar calendar = Calendar.getInstance();
 		end_hour = start_hour + 1 ; // 預設多1小時
 		end_minute = start_minute;
-		end_time.setText(start_hour + ":" + start_minute);
+		end_time.setText(end_hour + ":" + end_minute);
 	}
 }

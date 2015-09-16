@@ -96,6 +96,19 @@
                 android:ems="20" >
             </EditText>
         </TableRow>
+        <TableRow>
+            <TextView
+                android:id="@+id/text_alarm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Alarm" />
+
+            <Spinner
+                android:id="@+id/spinner_alarm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_span="2" />
+        </TableRow>
     </TableLayout>
 
     <Button

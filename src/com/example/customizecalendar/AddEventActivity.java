@@ -29,6 +29,8 @@ import android.widget.TimePicker;
 
 public class AddEventActivity extends Activity implements OnClickListener {
 	
+	static String EXTRA_NAME = "com.example.customizecalendar.AddEvent";
+	
 	public static final String[] EVENT_PROJECTION = new String [] {
          Calendars._ID,                           // 0
          Calendars.CALENDAR_DISPLAY_NAME,         // 1
@@ -36,8 +38,8 @@ public class AddEventActivity extends Activity implements OnClickListener {
 	private static final int PROJECTION_ID_INDEX = 0;
 	private static final int PROJECTION_DISPLAY_NAME_INDEX = 1;
 	
-	private int[] alarmTimeList = {0, 60, 60*5, 60*10};
-	private int alarmTime = 0;
+	private int[] mAlarmTimeList = {0, 60, 60*5, 60*10};
+	private int mAlarmTime = 0;
 	
 	private Button btnOK;
 	private Button btnCancel;
@@ -51,18 +53,18 @@ public class AddEventActivity extends Activity implements OnClickListener {
 	private Spinner spinner_alarm;
 	
 	// 紀錄事件開始與結束時間
-	private int start_year;
-	private int start_month;
-	private int start_day;
-	private int start_hour;
-	private int start_minute;
-	private int end_year;
-	private int end_month;
-	private int end_day;
-	private int end_hour;
-	private int end_minute;
+	private int mStartYear;
+	private int mStartMonth;
+	private int mStartDay;
+	private int mStartHour;
+	private int mStartMinute;
+	private int mEndYear;
+	private int mEndMonth;
+	private int mEndDay;
+	private int mEndHour;
+	private int mEndMinute;
 	
-	private int calendarID;
+	private int mCalendarId;
 	@Override
 	public void onCreate(Bundle savedInstance) {
 		super.onCreate(savedInstance);
@@ -76,7 +78,7 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		spinner_alarm = (Spinner) findViewById(R.id.spinner_alarm);
 		spinner_alarm.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
             public void onItemSelected(AdapterView adapterView, View view, int position, long id){
-            	alarmTime = alarmTimeList[position];
+            	mAlarmTime = mAlarmTimeList[position];
             }
             public void onNothingSelected(AdapterView arg0) {                
             }
@@ -118,27 +120,27 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		if (v == start_date) {
 			new DatePickerDialog(this,
 					callback_startDatePick,
-					start_year,
-					start_month,
-					start_day).show();
+					mStartYear,
+					mStartMonth,
+					mStartDay).show();
 		} else if (v == start_time) {
 			// 執行TimePick
 			new TimePickerDialog(this,
 					callback_startTimePick,  // callback
-                    start_hour,  		// default time
-                    start_minute,
+                    mStartHour,  		// default time
+                    mStartMinute,
                     true).show();  		// 24 hour                    
 		} else if (v == end_date) {
 			new DatePickerDialog(this,
 					callback_endDatePick,
-					end_year,
-					end_month,
-					end_day).show();
+					mEndYear,
+					mEndMonth,
+					mEndDay).show();
 		} else if (v == end_time) {
 			new TimePickerDialog(this,
 					callback_endTimePick,
-					end_hour,  		
-					end_minute,
+					mEndHour,  		
+					mEndMinute,
                     true).show();  
 		}
 	}
@@ -146,35 +148,35 @@ public class AddEventActivity extends Activity implements OnClickListener {
 	// TimePick選擇好時間後會執行此callback
 	TimePickerDialog.OnTimeSetListener callback_startTimePick = new TimePickerDialog.OnTimeSetListener() {
 	    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-	    	start_hour = hourOfDay;
-	    	start_minute = minute;
-	    	start_time.setText(start_hour + ":" + start_minute);
+	    	mStartHour = hourOfDay;
+	    	mStartMinute = minute;
+	    	start_time.setText(mStartHour + ":" + mStartMinute);
 	    }
 	  };  
 
 	DatePickerDialog.OnDateSetListener callback_startDatePick = new DatePickerDialog.OnDateSetListener() {
 		public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-			start_year= year;
-			start_month = monthOfYear;
-			start_day = dayOfMonth;
-			start_date.setText(start_year + "/" + (start_month+1) + "/" + start_day);
+			mStartYear= year;
+			mStartMonth = monthOfYear;
+			mStartDay = dayOfMonth;
+			start_date.setText(mStartYear + "/" + (mStartMonth+1) + "/" + mStartDay);
 		}
 	};  
 	
 	TimePickerDialog.OnTimeSetListener callback_endTimePick = new TimePickerDialog.OnTimeSetListener() {
 	    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-	    	end_hour = hourOfDay;
-	    	end_minute = minute;
-	    	end_time.setText(end_hour + ":" + end_minute);
+	    	mEndHour = hourOfDay;
+	    	mEndMinute = minute;
+	    	end_time.setText(mEndHour + ":" + mEndMinute);
 	    }
 	  };  
 
 	DatePickerDialog.OnDateSetListener callback_endDatePick = new DatePickerDialog.OnDateSetListener() {
 		public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-			end_year= year;
-			end_month = monthOfYear;
-			end_day = dayOfMonth;
-			end_date.setText(end_year + "/" + (end_month+1) + "/" + end_day);
+			mEndYear= year;
+			mEndMonth = monthOfYear;
+			mEndDay = dayOfMonth;
+			end_date.setText(mEndYear + "/" + (mEndMonth+1) + "/" + mEndDay);
 		}
 	};  
 		  
@@ -184,7 +186,7 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		Bundle bundle = new Bundle();
 		bundle.putLong("eventID", eventID);
 		
-		intent.putExtra("com.example.customizecalendar.AddEvent", bundle);
+		intent.putExtra(EXTRA_NAME, bundle);
 		AddEventActivity.this.setResult(RESULT_OK, intent);
 		AddEventActivity.this.finish();
 	}
@@ -193,10 +195,10 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		long startMillis = 0; 
 		long endMillis = 0;     
 		Calendar beginTime = Calendar.getInstance();
-		beginTime.set(start_year, start_month, start_day, start_hour, start_minute);
+		beginTime.set(mStartYear, mStartMonth, mStartDay, mStartHour, mStartMinute);
 		startMillis = beginTime.getTimeInMillis();
 		Calendar endTime = Calendar.getInstance();
-		endTime.set(end_year, end_month, end_day, end_hour, end_minute);
+		endTime.set(mEndYear, mEndMonth, mEndDay, mEndHour, mEndMinute);
 		endMillis = endTime.getTimeInMillis();
 			
 		ContentResolver cr = getContentResolver();
@@ -206,7 +208,7 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		values.put(Events.TITLE, editTitle.getText().toString());
 		values.put(Events.DESCRIPTION, editDesc.getText().toString());
 		values.put(Events.EVENT_TIMEZONE, "Taiwan");
-		values.put(Events.CALENDAR_ID, calendarID);
+		values.put(Events.CALENDAR_ID, mCalendarId);
 		
 		Uri uri = cr.insert(Events.CONTENT_URI, values);		
 		long eventID = Long.parseLong(uri.getLastPathSegment());
@@ -229,7 +231,7 @@ public class AddEventActivity extends Activity implements OnClickListener {
         while (cur.moveToNext()) {
 		    String displayName = null;
 		    
-		    calendarID = (int) cur.getLong(PROJECTION_ID_INDEX) ;
+		    mCalendarId = (int) cur.getLong(PROJECTION_ID_INDEX) ;
 		    displayName = cur.getString(PROJECTION_DISPLAY_NAME_INDEX);		    
 		    mStr.add(displayName);
 		    //TODO: 這裡應該再加一段處理calendar ID的code,讓User可以選擇event加到哪個calendar
@@ -247,7 +249,7 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
 		
 		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-		am.set(AlarmManager.RTC_WAKEUP, startTime - (alarmTime * 1000), pendingIntent);
+		am.set(AlarmManager.RTC_WAKEUP, startTime - (mAlarmTime * 1000), pendingIntent);
 		
 	}
 	
@@ -270,26 +272,26 @@ public class AddEventActivity extends Activity implements OnClickListener {
 	}
 	
 	private void setStartDate(Bundle bundle) {		
-		start_year = bundle.getInt("year");
-		start_month = bundle.getInt("month");
-		start_day = bundle.getInt("day");
-		start_date.setText(start_year + "/" + (start_month+1) + "/" + start_day);
+		mStartYear = bundle.getInt("year");
+		mStartMonth = bundle.getInt("month");
+		mStartDay = bundle.getInt("day");
+		start_date.setText(mStartYear + "/" + (mStartMonth+1) + "/" + mStartDay);
 		
 		Calendar calendar = Calendar.getInstance();
-		start_hour = calendar.get(Calendar.HOUR_OF_DAY);
-		start_minute = calendar.get(Calendar.MINUTE);
-		start_time.setText(start_hour + ":" + start_minute);
+		mStartHour = calendar.get(Calendar.HOUR_OF_DAY);
+		mStartMinute = calendar.get(Calendar.MINUTE);
+		start_time.setText(mStartHour + ":" + mStartMinute);
 	}
 	
 	private void setEndDate() {
-		end_year = start_year;
-		end_month = start_month;
-		end_day = start_day;	
-		end_date.setText(end_year + "/" + (end_month+1) + "/" + end_day);
+		mEndYear = mStartYear;
+		mEndMonth = mStartMonth;
+		mEndDay = mStartDay;	
+		end_date.setText(mEndYear + "/" + (mEndMonth+1) + "/" + mEndDay);
 		
 		Calendar calendar = Calendar.getInstance();
-		end_hour = start_hour + 1 ; // 預設多1小時
-		end_minute = start_minute;
-		end_time.setText(end_hour + ":" + end_minute);
+		mEndHour = mStartHour + 1 ; // 預設多1小時
+		mEndMinute = mStartMinute;
+		end_time.setText(mEndHour + ":" + mEndMinute);
 	}
 }

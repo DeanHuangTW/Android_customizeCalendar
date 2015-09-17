@@ -9,7 +9,7 @@ import android.util.Log;
 /* 這個class是用來設置要畫在GridView上的日期
  * 根據設置的年與月,來決定每格要填什麼數字 */
 public class FillGridCell {
-	private String TAG = "Dean";
+	private static final String TAG = "Dean";
 	
 	private int mYear;
 	private int mMonth;

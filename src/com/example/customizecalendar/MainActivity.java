@@ -8,9 +8,7 @@ import java.util.HashMap;
 import com.example.customizecalendar.DayEvent;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -29,7 +27,8 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener ,OnItemClickListener {
-	private String TAG = "Dean";
+	private static final String TAG = "Dean";
+	static String EXTRA_NAME = "com.example.customizecalendar.AddEvent";
 	
 	// 今天的年,月,日
 	private int mYearOfToday;
@@ -42,32 +41,32 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	
 	private GridView myCalendarView;
 	private TextView mWeekDays;
-	private TextView prevMon;
-	private TextView nextMon;
-	private TextView dateView;
-	private Button btn_AddEvent;
+	private TextView mPrevMonth;
+	private TextView mNextMonth;
+	private TextView mDateView;
+	private Button mBtnAddEvent;
 	private ListView mEventList;
-	private SimpleAdapter adapter;
+	private SimpleAdapter mAdapter;
 	//紀錄之前點選的GridView資料
-	private TextView prevClickView;
-	private String prevColor;
-	private int prevPos;
+	private TextView mPrevClickView;
+	private String mPrevColor;
+	private int mPrevPosition;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		btn_AddEvent = (Button) findViewById(R.id.btn_addEvent);
-		btn_AddEvent.setOnClickListener(this);
+		mBtnAddEvent = (Button) findViewById(R.id.btn_addEvent);
+		mBtnAddEvent.setOnClickListener(this);
 		myCalendarView = (GridView) findViewById(R.id.myCalendar);
 		mWeekDays = (TextView) findViewById(R.id.weekDay);
 		mWeekDays.setText("Sun        Mon        Tue        Wed        Thu        Fri        Sat");
-		prevMon = (TextView) findViewById(R.id.prevMonth);
-		prevMon.setOnClickListener(this);
-		nextMon = (TextView) findViewById(R.id.nextMonth);
-		nextMon.setOnClickListener(this);
-		dateView = (TextView) findViewById(R.id.date);
+		mPrevMonth = (TextView) findViewById(R.id.prevMonth);
+		mPrevMonth.setOnClickListener(this);
+		mNextMonth = (TextView) findViewById(R.id.nextMonth);
+		mNextMonth.setOnClickListener(this);
+		mDateView = (TextView) findViewById(R.id.date);
 		mEventList = (ListView) findViewById(R.id.eventList);
 		mEventList.setOnItemClickListener(this);
 		
@@ -77,8 +76,8 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		
 		FillGridCell gridCell = new FillGridCell();
 		NoteAdapter adapter = new NoteAdapter(this, 
-		    gridCell.getGridList(), R.layout.gridcell, new String[]{"dayNum"},
-		    new int[]{R.id.num});
+				gridCell.getGridList(), R.layout.gridcell, new String[]{"dayNum"},
+				new int[]{R.id.num});
 		myCalendarView.setAdapter(adapter);		
 		myCalendarView.setOnItemClickListener(this);
 		
@@ -96,14 +95,14 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	@Override
 	public void onClick(View v) {
 		// 新增event
-		if (v == btn_AddEvent) {
+		if (v == mBtnAddEvent) {
 			Log.i(TAG, "addEvent");
 			showAddEventInterface();
 			return;
 		}
 		
 		//月份切換
-		if (v == prevMon) {
+		if (v == mPrevMonth) {
 			Log.i(TAG, "Chnage to previous month");
 			if (mMonthOfToday == 0) {
 				mMonthOfToday = 11;
@@ -111,7 +110,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 			} else {
 				mMonthOfToday--;
 			}
-		} else if (v == nextMon){
+		} else if (v == mNextMonth){
 			Log.i(TAG, "Chnage to next month");
 			if (mMonthOfToday == 11) {
 				mMonthOfToday = 0;
@@ -129,8 +128,8 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	private void updateGridView(int year, int month) {
 		FillGridCell gridCell = new FillGridCell(year, month);
 		NoteAdapter adapter = new NoteAdapter(this, 
-		    gridCell.getGridList(), R.layout.gridcell, new String[]{"dayNum"},
-		    new int[]{R.id.num});
+				gridCell.getGridList(), R.layout.gridcell, new String[]{"dayNum"},
+				new int[]{R.id.num});
 		myCalendarView.setAdapter(adapter);
 	}
 	
@@ -145,14 +144,14 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		updateEventList(year, month, day);		
     	
     	// 設定點選日期的顏色
-		if (prevClickView != null) {// 恢復顏色			
-			setTextColor(prevClickView, prevColor, prevPos);
+		if (mPrevClickView != null) {// 恢復顏色			
+			setTextColor(mPrevClickView, mPrevColor, mPrevPosition);
 		}
 		//設定新的View的顏色
-		prevClickView = (TextView)view.findViewById(R.id.num);
-		setTextColor(prevClickView, "Orange", position);
-		prevColor = theMap.get("color").toString();
-		prevPos = position;
+		mPrevClickView = (TextView)view.findViewById(R.id.num);
+		setTextColor(mPrevClickView, "Orange", position);
+		mPrevColor = theMap.get("color").toString();
+		mPrevPosition = position;
 	}
 	
 	private void updateEventList(int year, int month, int day) {
@@ -178,14 +177,14 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		    item.put("startTime", formatter.format(calendar.getTime()));
 		    list.add(item);
 		}
-		adapter = new SimpleAdapter(this, 
-			list,
-			android.R.layout.simple_list_item_2,
-			new String[] { "Title","startTime" },
-			new int[] {android.R.id.text1, android.R.id.text2});
+		mAdapter = new SimpleAdapter(this, 
+				list,
+				android.R.layout.simple_list_item_2,
+				new String[] { "Title","startTime" },
+				new int[] {android.R.id.text1, android.R.id.text2});
 				 
 		//ListActivity設定adapter
-		mEventList.setAdapter(adapter);  	
+		mEventList.setAdapter(mAdapter);  	
 	}
 	
 	private void eventListClick(int position) {
@@ -245,7 +244,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	}
 	
 	private void setDateView(int year, int month, int day) {
-		dateView.setText(String.valueOf(year) + "-"
+		mDateView.setText(String.valueOf(year) + "-"
 				+ String.valueOf(month + 1) + "-"
 				+ String.valueOf(day));
 	}
@@ -271,7 +270,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		if (resultCode == RESULT_CANCELED) {
 			Log.v(TAG, "Give up to add a new event");
 		} else if (resultCode == RESULT_OK) {
-			Bundle bundle = data.getBundleExtra("com.example.customizecalendar.AddEvent");
+			Bundle bundle = data.getBundleExtra(EXTRA_NAME);
 			Long evenId = bundle.getLong("eventID");
 			Log.i(TAG, "Add a new event. ID: " + evenId);
 			

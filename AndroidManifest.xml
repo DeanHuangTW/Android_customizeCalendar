@@ -26,6 +26,9 @@
         <activity
             android:name=".AddEventActivity">            
         </activity>
+        <activity
+            android:name=".ModifyEventActivity">            
+        </activity>
         <receiver android:name="AlarmReceiver"></receiver>
     </application>
 

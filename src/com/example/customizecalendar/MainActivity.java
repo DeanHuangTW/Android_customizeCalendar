@@ -28,7 +28,8 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity implements OnClickListener ,OnItemClickListener {
 	private static final String TAG = "Dean";
-	static String EXTRA_NAME = "com.example.customizecalendar.AddEvent";
+	static String EXTRA_ADD_EVENT = "com.example.customizecalendar.AddEvent";
+	static String EXTRA_MODIFY_EVENT = "com.example.customizecalendar.ModifyEventActivity";
 	
 	// 今天的年,月,日
 	private int mYearOfToday;
@@ -189,7 +190,9 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	
 	private void eventListClick(int position) {
 		Log.v(TAG, "ListView click event");
-    	long endVal = 0, beginVal = 0;
+    	long endTimeInMills = 0, beginTimeInMills = 0;
+    	String eventTitle = null;
+    	String eventDesc = null;
     	
     	//Step 1. get event's data according to event ID
     	HashMap<String,String> data = (HashMap<String,String>)mEventList.getItemAtPosition(position);
@@ -197,17 +200,25 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
     	Log.v(TAG, "event ID " + eventId);
     	Cursor cur = DayEvent.queryEvntById(getContentResolver(), eventId);            	
     	while (cur.moveToNext()) { // Only one data
-		    endVal = cur.getLong(DayEvent.PROJ_END_INDEX);
-		    beginVal = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);
+    		endTimeInMills = cur.getLong(DayEvent.PROJ_END_INDEX);
+    		beginTimeInMills = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);
+		    eventTitle = cur.getString(DayEvent.PROJ_TITLE_INDEX);
+		    eventDesc = cur.getString(DayEvent.PROJ_DESC_INDEX);
     	}
     	
     	//Step 2. Write data to intent and open it.
-    	Uri uri = ContentUris.withAppendedId(Events.CONTENT_URI, eventId);
-    	Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-    	//It will show 1970/1/1 if no set time
-    	intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginVal);
-    	intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endVal);
-    	startActivity(intent);
+    	Intent intent = new Intent();
+		intent.setClass(MainActivity.this, ModifyEventActivity.class);
+		
+		Bundle bundle = new Bundle();
+		bundle.putLong("beginTime", beginTimeInMills);
+		bundle.putLong("endTime", endTimeInMills);
+		bundle.putString("title", eventTitle);
+		bundle.putString("desc", eventDesc);
+		bundle.putInt("eventID", eventId);
+		intent.putExtras(bundle);
+		
+		startActivityForResult(intent, 1);
     	
 	}
 	
@@ -267,14 +278,24 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		if (resultCode == RESULT_CANCELED) {
-			Log.v(TAG, "Give up to add a new event");
-		} else if (resultCode == RESULT_OK) {
-			Bundle bundle = data.getBundleExtra(EXTRA_NAME);
-			Long evenId = bundle.getLong("eventID");
-			Log.i(TAG, "Add a new event. ID: " + evenId);
-			
-			updateEventList(mYearOfSelect, mMonthOfSelect, mDayOfToday);
+		if (requestCode == 0) {
+			Log.v(TAG, "back from AddEventActivity");
+			if (resultCode == RESULT_CANCELED) {
+				Log.v(TAG, "Give up to add a new event");
+			} else if (resultCode == RESULT_OK) {
+				Bundle bundle = data.getBundleExtra(EXTRA_ADD_EVENT);
+				Long evenId = bundle.getLong("eventID");
+				Log.i(TAG, "Add a new event. ID: " + evenId);
+				
+				updateEventList(mYearOfSelect, mMonthOfSelect, mDayOfToday);
+			}
+		} else if (requestCode == 1) {
+			Log.v(TAG, "back from ModifyEventActivity");
+			if (resultCode == RESULT_CANCELED) {
+				Log.v(TAG, "Give up to modify event");
+			} else if (resultCode == RESULT_OK) { // modify or delete an event
+				updateEventList(mYearOfSelect, mMonthOfSelect, mDayOfToday);
+			}
 		}
 	}
 	

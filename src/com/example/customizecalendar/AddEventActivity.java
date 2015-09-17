@@ -29,7 +29,7 @@ import android.widget.TimePicker;
 
 public class AddEventActivity extends Activity implements OnClickListener {
 	
-	static String EXTRA_NAME = "com.example.customizecalendar.AddEvent";
+	static String EXTRA_ADD_EVENT = "com.example.customizecalendar.AddEvent";
 	
 	public static final String[] EVENT_PROJECTION = new String [] {
          Calendars._ID,                           // 0
@@ -186,7 +186,7 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		Bundle bundle = new Bundle();
 		bundle.putLong("eventID", eventID);
 		
-		intent.putExtra(EXTRA_NAME, bundle);
+		intent.putExtra(EXTRA_ADD_EVENT, bundle);
 		AddEventActivity.this.setResult(RESULT_OK, intent);
 		AddEventActivity.this.finish();
 	}

@@ -208,9 +208,8 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
     	//It will show 1970/1/1 if no set time
     	intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginVal);
     	intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endVal);
-    	
-		
     	startActivity(intent);
+    	
 	}
 	
 	private void setTextColor(TextView view, String color, int position) {
@@ -254,7 +253,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	// 跳到新增event窗口
 	private void showAddEventInterface() {
 		Intent intent = new Intent();
-		intent.setClass(MainActivity.this, AddEvent.class);
+		intent.setClass(MainActivity.this, AddEventActivity.class);
 		
 		Bundle bundle = new Bundle();
 		bundle.putInt("year", mYearOfSelect);
@@ -275,6 +274,8 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 			Bundle bundle = data.getBundleExtra("com.example.customizecalendar.AddEvent");
 			Long evenId = bundle.getLong("eventID");
 			Log.i(TAG, "Add a new event. ID: " + evenId);
+			
+			updateEventList(mYearOfSelect, mMonthOfSelect, mDayOfToday);
 		}
 	}
 	

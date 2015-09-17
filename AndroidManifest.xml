@@ -24,7 +24,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".AddEvent">            
+            android:name=".AddEventActivity">            
         </activity>
         <receiver android:name="AlarmReceiver"></receiver>
     </application>

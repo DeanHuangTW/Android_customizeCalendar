@@ -47,36 +47,37 @@ public final class R {
     }
     public static final class id {
         public static final int action_settings=0x7f090019;
-        public static final int btn_addEvent=0x7f090006;
-        public static final int btn_cancel=0x7f090017;
-        public static final int btn_ok=0x7f090016;
-        public static final int buttonlayout=0x7f090003;
-        public static final int calendar_name=0x7f090009;
-        public static final int date=0x7f090000;
-        public static final int edit_desc=0x7f090013;
-        public static final int end_date=0x7f090010;
-        public static final int end_time=0x7f090011;
-        public static final int eventList=0x7f090007;
-        public static final int myCalendar=0x7f090002;
-        public static final int nextMonth=0x7f090005;
-        public static final int num=0x7f090018;
-        public static final int prevMonth=0x7f090004;
-        public static final int spinner_alarm=0x7f090015;
-        public static final int start_date=0x7f09000d;
-        public static final int start_time=0x7f09000e;
-        public static final int text_alarm=0x7f090014;
-        public static final int text_calendar=0x7f090008;
-        public static final int text_desc=0x7f090012;
-        public static final int text_endTime=0x7f09000f;
-        public static final int text_startTime=0x7f09000c;
-        public static final int text_title=0x7f09000a;
-        public static final int title=0x7f09000b;
-        public static final int weekDay=0x7f090001;
+        public static final int btn_addEvent=0x7f090008;
+        public static final int btn_cancel=0x7f090001;
+        public static final int btn_ok=0x7f090000;
+        public static final int buttonlayout=0x7f090005;
+        public static final int calendar_name=0x7f09000c;
+        public static final int date=0x7f090002;
+        public static final int edit_desc=0x7f090016;
+        public static final int end_date=0x7f090013;
+        public static final int end_time=0x7f090014;
+        public static final int eventList=0x7f090009;
+        public static final int myCalendar=0x7f090004;
+        public static final int nextMonth=0x7f090007;
+        public static final int num=0x7f09000a;
+        public static final int prevMonth=0x7f090006;
+        public static final int spinner_alarm=0x7f090018;
+        public static final int start_date=0x7f090010;
+        public static final int start_time=0x7f090011;
+        public static final int text_alarm=0x7f090017;
+        public static final int text_calendar=0x7f09000b;
+        public static final int text_desc=0x7f090015;
+        public static final int text_endTime=0x7f090012;
+        public static final int text_startTime=0x7f09000f;
+        public static final int text_title=0x7f09000d;
+        public static final int title=0x7f09000e;
+        public static final int weekDay=0x7f090003;
     }
     public static final class layout {
-        public static final int activity_main=0x7f030000;
-        public static final int event_dialog=0x7f030001;
+        public static final int activity_add_event=0x7f030000;
+        public static final int activity_main=0x7f030001;
         public static final int gridcell=0x7f030002;
+        public static final int partial_event=0x7f030003;
     }
     public static final class menu {
         public static final int main=0x7f080000;

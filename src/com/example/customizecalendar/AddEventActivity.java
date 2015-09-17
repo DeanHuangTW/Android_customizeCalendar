@@ -9,7 +9,6 @@ import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -17,7 +16,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract.Calendars;
 import android.provider.CalendarContract.Events;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -29,7 +27,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-public class AddEvent extends Activity implements OnClickListener {
+public class AddEventActivity extends Activity implements OnClickListener {
 	
 	public static final String[] EVENT_PROJECTION = new String [] {
          Calendars._ID,                           // 0
@@ -68,7 +66,7 @@ public class AddEvent extends Activity implements OnClickListener {
 	@Override
 	public void onCreate(Bundle savedInstance) {
 		super.onCreate(savedInstance);
-		setContentView(R.layout.event_dialog);
+		setContentView(R.layout.activity_add_event);
 		
 		editTitle = (EditText) findViewById(R.id.title);
 		editDesc = (EditText) findViewById(R.id.edit_desc);
@@ -111,8 +109,8 @@ public class AddEvent extends Activity implements OnClickListener {
 			saveAndBack();
 			return;
 		} else if (v == btnCancel) {
-			AddEvent.this.setResult(RESULT_CANCELED);
-			AddEvent.this.finish();
+			AddEventActivity.this.setResult(RESULT_CANCELED);
+			AddEventActivity.this.finish();
 			return;
 		}
 		
@@ -187,8 +185,8 @@ public class AddEvent extends Activity implements OnClickListener {
 		bundle.putLong("eventID", eventID);
 		
 		intent.putExtra("com.example.customizecalendar.AddEvent", bundle);
-		AddEvent.this.setResult(RESULT_OK, intent);
-		AddEvent.this.finish();
+		AddEventActivity.this.setResult(RESULT_OK, intent);
+		AddEventActivity.this.finish();
 	}
 	
 	private long addNewEvent() {

@@ -3,11 +3,13 @@ package com.example.customizecalendar;
 import java.util.Calendar;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -84,7 +86,23 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 			saveData();
 			return;
 		} else if (v == mBtnDelete) {
-			deleteEvent();
+			AlertDialog.Builder deleteDialog = new AlertDialog.Builder(this);
+			deleteDialog.setTitle("Event Delete")
+						.setMessage("Are you sure to delete this event?")
+						.setPositiveButton("Yes", new DialogInterface.OnClickListener() {							
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								deleteEvent(); // do event delete						
+							}
+						})
+						.setNegativeButton("No", new DialogInterface.OnClickListener() {							
+							@Override
+							public void onClick(DialogInterface dialog, int which) {														
+							}
+						});
+			AlertDialog dialog = deleteDialog.create();
+			dialog.show();
+			return;		
 		}
 		
 		// TextView click event

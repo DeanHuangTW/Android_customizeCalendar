@@ -4,5 +4,16 @@
     <string name="app_name">CustomizeCalendar</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-
+	<string-array name="reminder_time">
+	    	<item>不提醒</item>
+	    	<item>1分鐘前</item>
+	    	<item>5分鐘前</item>
+	    	<item>10分鐘前</item>
+	</string-array>
+	
+	<string-array name="reminder_way">
+    	<item>Toast</item>
+    	<item>震動</item>
+    	<item>音樂</item>
+	</string-array>
 </resources>

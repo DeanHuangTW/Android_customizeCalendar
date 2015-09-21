@@ -16,8 +16,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract.Calendars;
 import android.provider.CalendarContract.Events;
-import android.provider.CalendarContract.Reminders;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -40,8 +38,6 @@ public class AddEventActivity extends Activity implements OnClickListener {
 	private static final int PROJECTION_ID_INDEX = 0;
 	private static final int PROJECTION_DISPLAY_NAME_INDEX = 1;
 	
-	private String[] mAlarmTimeWayList = {"toast", "vibrator", "sound"};
-	private String mAlarmTimeWay = "toast";
 	private int[] mAlarmTimeList = {0, 1, 5, 10};
 	private int mAlarmTime = 0;
 	
@@ -55,7 +51,6 @@ public class AddEventActivity extends Activity implements OnClickListener {
 	private TextView end_time;
 	private Spinner calendarName;
 	private Spinner spinner_alarm;
-	private Spinner mSpinnerAlarmWay;
 	
 	// 紀錄事件開始與結束時間
 	private int mStartYear;
@@ -80,16 +75,6 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		calendarName = (Spinner) findViewById(R.id.calendar_name);	
 		findCalendarList();
 		
-		// alarm提醒方式
-		mSpinnerAlarmWay= (Spinner) findViewById(R.id.spinner_alarm_way);
-		mSpinnerAlarmWay.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
-            public void onItemSelected(AdapterView adapterView, View view, int position, long id){
-            	mAlarmTimeWay = mAlarmTimeWayList[position];
-            }
-            public void onNothingSelected(AdapterView arg0) {                
-            }
-		});
-		setAlarmWayList();
 		// alarm提醒時間
 		spinner_alarm = (Spinner) findViewById(R.id.spinner_alarm);
 		spinner_alarm.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
@@ -229,7 +214,10 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		Uri uri = cr.insert(Events.CONTENT_URI, values);		
 		long eventID = Long.parseLong(uri.getLastPathSegment());
 		//鬧鐘設置
-		setAlarm(eventID);
+		if (mAlarmTime > 0) {
+			AlarmService alarm = new AlarmService(eventID);
+			alarm.setAlarm(getContentResolver(), mAlarmTime);
+		}
 		
 		return eventID;
 	}
@@ -257,17 +245,6 @@ public class AddEventActivity extends Activity implements OnClickListener {
         calendarName.setAdapter(adapter);
 	}
 	
-	// 設置鬧鐘, eventID拿來當鬧鐘的unique ID
-	private void setAlarm(long eventID) {
-		ContentResolver cr = getContentResolver();
-		ContentValues values = new ContentValues();
-		
-		values.put(Reminders.MINUTES, mAlarmTime);  // 事件發生前多久提醒 (分)
-		values.put(Reminders.EVENT_ID, eventID);
-		values.put(Reminders.METHOD, Reminders.METHOD_ALERT);  //提醒方式
-		cr.insert(Reminders.CONTENT_URI, values);
-	}
-	
 	
 	/* 鬧鐘時間選項 */
 	private void setAlarmTimeList() {
@@ -276,14 +253,7 @@ public class AddEventActivity extends Activity implements OnClickListener {
 				android.R.layout.simple_spinner_item);
         spinner_alarm.setAdapter(adapter);
 	}
-	
-	private void setAlarmWayList() {
-		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-				R.array.reminder_way,
-				android.R.layout.simple_spinner_item);
-		mSpinnerAlarmWay.setAdapter(adapter);
-	}
-	
+		
 	private void setStartDate(Bundle bundle) {		
 		mStartYear = bundle.getInt("year");
 		mStartMonth = bundle.getInt("month");
@@ -302,7 +272,6 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		mEndDay = mStartDay;	
 		end_date.setText(mEndYear + "/" + (mEndMonth+1) + "/" + mEndDay);
 		
-		Calendar calendar = Calendar.getInstance();
 		mEndHour = mStartHour + 1 ; // 預設多1小時
 		mEndMinute = mStartMinute;
 		end_time.setText(mEndHour + ":" + mEndMinute);

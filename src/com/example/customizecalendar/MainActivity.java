@@ -190,31 +190,17 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	
 	private void eventListClick(int position) {
 		Log.v(TAG, "ListView click event");
-    	long endTimeInMills = 0, beginTimeInMills = 0;
-    	String eventTitle = null;
-    	String eventDesc = null;
     	
     	//Step 1. get event's data according to event ID
     	HashMap<String,String> data = (HashMap<String,String>)mEventList.getItemAtPosition(position);
     	int eventId = Integer.parseInt(data.get("ID"));
     	Log.v(TAG, "event ID " + eventId);
-    	Cursor cur = DayEvent.queryEvntById(getContentResolver(), eventId);            	
-    	while (cur.moveToNext()) { // Only one data
-    		endTimeInMills = cur.getLong(DayEvent.PROJ_END_INDEX);
-    		beginTimeInMills = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);
-		    eventTitle = cur.getString(DayEvent.PROJ_TITLE_INDEX);
-		    eventDesc = cur.getString(DayEvent.PROJ_DESC_INDEX);
-    	}
-    	
+    	    	
     	//Step 2. Write data to intent and open it.
     	Intent intent = new Intent();
 		intent.setClass(MainActivity.this, ModifyEventActivity.class);
 		
 		Bundle bundle = new Bundle();
-		bundle.putLong("beginTime", beginTimeInMills);
-		bundle.putLong("endTime", endTimeInMills);
-		bundle.putString("title", eventTitle);
-		bundle.putString("desc", eventDesc);
 		bundle.putInt("eventID", eventId);
 		intent.putExtras(bundle);
 		
@@ -281,18 +267,18 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		if (requestCode == 0) {
 			Log.v(TAG, "back from AddEventActivity");
 			if (resultCode == RESULT_CANCELED) {
-				Log.v(TAG, "Give up to add a new event");
+				Log.v(TAG, "    Give up to add a new event");
 			} else if (resultCode == RESULT_OK) {
 				Bundle bundle = data.getBundleExtra(EXTRA_ADD_EVENT);
 				Long evenId = bundle.getLong("eventID");
-				Log.i(TAG, "Add a new event. ID: " + evenId);
+				Log.i(TAG, "    Add a new event. ID: " + evenId);
 				
 				updateEventList(mYearOfSelect, mMonthOfSelect, mDayOfToday);
 			}
 		} else if (requestCode == 1) {
 			Log.v(TAG, "back from ModifyEventActivity");
 			if (resultCode == RESULT_CANCELED) {
-				Log.v(TAG, "Give up to modify event");
+				Log.v(TAG, "    Give up to modify event");
 			} else if (resultCode == RESULT_OK) { // modify or delete an event
 				updateEventList(mYearOfSelect, mMonthOfSelect, mDayOfToday);
 			}

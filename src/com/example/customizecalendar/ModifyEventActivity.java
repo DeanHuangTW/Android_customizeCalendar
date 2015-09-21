@@ -3,10 +3,8 @@ package com.example.customizecalendar;
 import java.util.Calendar;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -17,8 +15,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract.Events;
-import android.provider.CalendarContract.Instances;
-import android.provider.CalendarContract.Reminders;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -36,14 +32,9 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 	static String EXTRA_MODIFY_EVENT = "com.example.customizecalendar.ModifyEventActivity";
 	private static final String TAG = "Dean";
 	
-	public static final String[] REMINDERS_PROJECTION = new String[] {
-			Reminders.EVENT_ID,      // 0
-			Reminders._ID
-	};
-	private String[] mAlarmTimeWayList = {"toast", "vibrator", "sound"};
-	private String mAlarmTimeWay = "toast";
 	private int[] mAlarmTimeList = {0, 1, 5, 10};
 	private int mAlarmTime = 0;
+	private int mAlarmOriginalTime = 0;
 	
 	private int mEventId;
 	private int mStartYear;
@@ -67,7 +58,6 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 	private TextView mTextEndDate;
 	private TextView mTextEndTime;
 	private Spinner mSpinnerAlarm;
-	private Spinner mSpinnerAlarmWay;
 	
 	@Override
 	public void onCreate(Bundle savedInstance) {
@@ -93,16 +83,6 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		mBtnCancel = (Button) findViewById(R.id.btn_cancel);
 		mBtnCancel.setOnClickListener(this);
 		
-		// alarm提醒方式
-		mSpinnerAlarmWay= (Spinner) findViewById(R.id.spinner_alarm_way);
-		mSpinnerAlarmWay.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
-            public void onItemSelected(AdapterView adapterView, View view, int position, long id){
-            	mAlarmTimeWay = mAlarmTimeWayList[position];
-            }
-            public void onNothingSelected(AdapterView arg0) {                
-            }
-		});
-		setAlarmWayList();
 		// alarm提醒時間
 		mSpinnerAlarm = (Spinner) findViewById(R.id.spinner_alarm);
 		mSpinnerAlarm.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
@@ -218,7 +198,13 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		cr.delete(deleteUri, null, null);
 		
 		// delete alarm
-		cancelAlarm(mEventId);
+		if (mAlarmOriginalTime > 0) {
+			Log.v(TAG, "Delete alarm");
+			AlarmService alarm = new AlarmService(mEventId);
+			alarm.cancelAlarm(getContentResolver());
+		} else {
+			Log.v(TAG, "This event do not have alarm. Do no need to delete alarm");
+		}
 		
 		Log.i(TAG, "Delete event. ID:" + mEventId);
 		// 更新結束,回主頁面
@@ -229,15 +215,6 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		ModifyEventActivity.this.finish();
 	}
 	
-	private void cancelAlarm(long eventID) {
-		Intent intent = new Intent(this, AlarmReceiver.class);
-		intent.setData(Uri.parse("custom://customizeCalendar/" + eventID));
-		intent.setAction(String.valueOf(eventID));
-		PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, 0);
-		
-		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-		am.cancel(pendingIntent);
-	}
 	
 	private void saveData() {
 		ContentResolver cr = getContentResolver();
@@ -262,7 +239,10 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		cr.update(updateUri, values, null, null);		
 		
 		//更新alarm
-		setAlarm(mEventId);
+		if (mAlarmTime > 0) {
+			AlarmService alarm = new AlarmService(mEventId);
+			alarm.updateAlarm(getContentResolver(), mAlarmTime);
+		}
 		
 		// 更新結束,回主頁面
 		Intent intent = getIntent();
@@ -275,11 +255,18 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 	
 	private void loadDataFromIntent(Bundle bundle) {
 		/* 讀取資料 */
-		Long beginTimeInMills = bundle.getLong("beginTime");
-		Long endTimeInMills = bundle.getLong("endTime");
-		String eventTitle = bundle.getString("title");
-		String eventDesc = bundle.getString("desc");
+		Long beginTimeInMills = 0L;
+		Long endTimeInMills = 0L;
+		String eventTitle = "";
+		String eventDesc = "";
 		mEventId = bundle.getInt("eventID");
+		Cursor cur = DayEvent.queryEvntById(getContentResolver(), mEventId);            	
+    	while (cur.moveToNext()) { // Only one data
+    		endTimeInMills = cur.getLong(DayEvent.PROJ_END_INDEX);
+    		beginTimeInMills = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);
+		    eventTitle = cur.getString(DayEvent.PROJ_TITLE_INDEX);
+		    eventDesc = cur.getString(DayEvent.PROJ_DESC_INDEX);
+    	}
 		
 		/* 設定資料 */
 		//start time
@@ -305,38 +292,28 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		mEditTitle.setText(eventTitle);
 		mEditDesc.setText(eventDesc);
 		
-		mSpinnerAlarmWay.setSelection(1);
-	}
-	
-	/* 根據eventID修改reminder的時間與方式*/
-	private void setAlarm(long eventID) {
-		//取得reminder Uri
-		ContentResolver cr = getContentResolver();
-		ContentValues values = new ContentValues();
-		int reminderId = queryRemindersId(eventID);
-		Uri updateUri = ContentUris.withAppendedId(Reminders.CONTENT_URI, reminderId);
-		// update
-		values.put(Reminders.MINUTES, mAlarmTime);  // 事件發生前多久提醒 (分)
-		values.put(Reminders.EVENT_ID, eventID);
-		values.put(Reminders.METHOD, Reminders.METHOD_ALERT);  //提醒方式
-		cr.update(updateUri, values, null, null);
-	}
-	
-	/* 根據eventID搜尋reminderID */
-	private int queryRemindersId(long eventID) {
-		String[] selectionArgs = new String[] { Long.toString(eventID) };
-		String selection = Reminders.EVENT_ID + "=?";		
-		int reminderId = 0;
-		
-		Cursor cursor = getContentResolver().query(
-				Reminders.CONTENT_URI, REMINDERS_PROJECTION, selection, selectionArgs, null);
-		while (cursor.moveToNext()) {
-			reminderId = cursor.getInt(1);
+		// alarm time
+		AlarmService alarm = new AlarmService(mEventId);
+		Cursor alarmCur = alarm.queryReminders(getContentResolver());
+		if (alarmCur.getCount() == 0) {
+			Log.v(TAG, "This event do not have alarm");
+			mAlarmTime = 0;
+			mSpinnerAlarm.setSelection(0);
+		} else {
+			while (alarmCur.moveToNext()) {
+				mAlarmTime = alarmCur.getInt(2);
+	    	}
+			for (int i=0 ; i < mAlarmTimeList.length; i++) {
+				if (mAlarmTime == mAlarmTimeList[i]) {
+					mSpinnerAlarm.setSelection(i);
+				}
+			}
 		}
+		// 紀錄原始的alarm Time,刪除事件的時候判斷是否需要刪除alarm
+		mAlarmOriginalTime = mAlarmTime;
 		
-		return reminderId;
 	}
-	
+		
 	private void setAlarmTimeList() {
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
 				R.array.reminder_time,
@@ -344,12 +321,6 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
         mSpinnerAlarm.setAdapter(adapter);
 	}
 	
-	private void setAlarmWayList() {
-		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-				R.array.reminder_way,
-				android.R.layout.simple_spinner_item);
-		mSpinnerAlarmWay.setAdapter(adapter);
-	}
 	
 	private void setTextDate(TextView view, int year, int month, int day) {
 		view.setText(String.valueOf(year) + "/" +

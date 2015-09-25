@@ -1,94 +1,119 @@
 package com.example.customizecalendar;
 
-import android.content.ContentResolver;
-import android.content.ContentUris;
+import com.example.customizecalendar.AlarmReceiver;
+import com.example.customizecalendar.DBHelper;
+
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.provider.CalendarContract.Reminders;
 import android.util.Log;
 
 public class AlarmService {
-	public static final String[] REMINDERS_PROJECTION = new String[] {
-		Reminders.EVENT_ID,      // 0
-		Reminders._ID,
-		Reminders.MINUTES
-	};
+	private String TAG = "Dean";
 	
 	private long mEventId;
+	private Context mContext;
 	
+	private DBHelper DH = null;
 	public AlarmService() {
 		this.mEventId = 0;
 	}
 	
-	public AlarmService(long Id) {
+	public AlarmService(Context ctx, long Id) {
 		this.mEventId = Id;
+		mContext = ctx;
 	}
 	
-	// 設置鬧鐘, eventID拿來當鬧鐘的unique ID
-	public void setAlarm(ContentResolver cr, int reminderTime) {
-		ContentValues values = new ContentValues();
-		
-		values.put(Reminders.MINUTES, reminderTime);  // 事件發生前多久提醒 (分)
-		values.put(Reminders.EVENT_ID, mEventId);
-		values.put(Reminders.METHOD, Reminders.METHOD_ALERT);  //提醒方式
-		cr.insert(Reminders.CONTENT_URI, values);
+	public void setAlarm(long start, int reminderTime, String alarmWay) {
+		Log.v(TAG, "setAlarm. ID:" + mEventId);
+		Intent intent = new Intent(mContext, AlarmReceiver.class);
+        intent.setData(Uri.parse("custom://customizeCalendar/" + mEventId));
+        intent.putExtra("EventID", mEventId);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
+          
+        AlarmManager am = (AlarmManager ) mContext.getSystemService(Context.ALARM_SERVICE );
+        am.set(AlarmManager .RTC_WAKEUP, start - (reminderTime * 1000 ), pendingIntent);
+        
+        // write database
+        DH = new DBHelper(mContext);
+        SQLiteDatabase db = DH.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("_EventID", mEventId);
+        values.put("_NotifyWay", alarmWay);
+        values.put("_NotifyTime", reminderTime);
+        db.insert("AlarmTable", null, values);
+        DH.close();
 	}
 	
-	/* 根據eventID修改reminder的時間與方式*/
-	public void updateAlarm(ContentResolver cr, int reminderTime) {
-		//取得reminder Uri
-		ContentValues values = new ContentValues();
-		int reminderId = queryRemindersId(cr);
-		Uri updateUri = ContentUris.withAppendedId(Reminders.CONTENT_URI, reminderId);
-		// update
-		values.put(Reminders.MINUTES, reminderTime);  // 事件發生前多久提醒 (分)
-		values.put(Reminders.EVENT_ID, mEventId);
-		values.put(Reminders.METHOD, Reminders.METHOD_ALERT);  //提醒方式
-		cr.update(updateUri, values, null, null);
+	public void cancelAlarm() {
+		Log.v(TAG, "cancelAlarm. ID:" + mEventId);
+		Intent intent = new Intent(mContext, AlarmReceiver.class);
+		intent.setData(Uri.parse("custom://customizeCalendar/" + mEventId));
+		intent.setAction(String.valueOf(mEventId));
+		PendingIntent pendingIntent = 
+				PendingIntent.getBroadcast(mContext.getApplicationContext(), 0, intent, 0);
+
+		AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+		am.cancel(pendingIntent);
+		
+		DH = new DBHelper(mContext);
+		SQLiteDatabase db = DH.getWritableDatabase();
+	    db.delete("AlarmTable", "_EventID=" + mEventId, null);
+	    DH.close();
 	}
 	
-	public void cancelAlarm(ContentResolver cr) {
-		//取得reminder Uri
-		int reminderId = queryRemindersId(cr);
-		Uri updateUri = ContentUris.withAppendedId(Reminders.CONTENT_URI, reminderId);
-		
-		cr.delete(updateUri, null, null);
+	public void updateAlarm(long start, int reminderTime, String alarmWay) {
+		Intent intent = new Intent(mContext, AlarmReceiver.class);
+        intent.setData(Uri.parse("custom://customizeCalendar/" + mEventId));
+        intent.putExtra("EventID", mEventId);
+        PendingIntent pendingIntent = 				//使用FLAG_CANCEL_CURRENT才能更新intent
+        		PendingIntent.getBroadcast(mContext, 0, intent,  PendingIntent.FLAG_CANCEL_CURRENT);
+          
+        AlarmManager am = (AlarmManager ) mContext.getSystemService(Context.ALARM_SERVICE );
+        am.set(AlarmManager .RTC_WAKEUP, start - (reminderTime * 1000 ), pendingIntent);
+        
+		DH = new DBHelper(mContext);
+        SQLiteDatabase db = DH.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("_EventID", mEventId);
+        values.put("_NotifyWay", alarmWay);
+        values.put("_NotifyTime", reminderTime);
+        db.update("AlarmTable", values, "_EventID=" + mEventId, null);
+        DH.close();
 	}
 	
-	/* 根據eventID搜尋reminderID */
-	public int queryRemindersId(ContentResolver cr) {
-		String[] selectionArgs = new String[] { Long.toString(mEventId) };
-		String selection = Reminders.EVENT_ID + "=?";		
-		int reminderId = 0;
+	public Cursor queryAlarmNotify() {
+		Log.v(TAG, "queryAlarmNotify");
 		
-		Cursor cursor = cr.query(
-				Reminders.CONTENT_URI, REMINDERS_PROJECTION, selection, selectionArgs, null);
-		while (cursor.moveToNext()) {
-			reminderId = cursor.getInt(1);  // Reminders._ID
-		}
-		
-		return reminderId;
+		DH = new DBHelper(mContext);
+        SQLiteDatabase db = DH.getReadableDatabase();
+        String[] columns = {"_EventID", "_NotifyWay", "_NotifyTime"};
+        String select = "(_EventID=" + mEventId + ")";
+        Cursor cursor = db.query("AlarmTable", columns, select, null, null, null, null);
+        
+        return cursor;
 	}
 	
-	public Cursor queryReminders(ContentResolver cr) {
-		String[] selectionArgs = new String[] { Long.toString(mEventId) };
-		String selection = Reminders.EVENT_ID + "=?";		
-		Cursor cursor = cr.query(
-				Reminders.CONTENT_URI, REMINDERS_PROJECTION, selection, selectionArgs, null);
-		
-		return cursor;
+	public String showAllAlarm() {
+		DH = new DBHelper(mContext);
+        SQLiteDatabase db = DH.getReadableDatabase();
+        String[] columns = {"_ID", "_EventID", "_NotifyWay", "_NotifyTime"};
+        Cursor cursor = db.query("AlarmTable", columns, null, null, null, null, null);
+        
+        String alarmList = "";
+        while (cursor.moveToNext()) {
+        	alarmList += "ID:" + cursor.getString(0) +
+        			"  EventID:" + cursor.getString(1) +
+        			"  NotifyWay:" + cursor.getString(2) +
+        			"  NotifyTime:" + cursor.getString(3) + "\n";
+        }
+        
+        return alarmList;
 	}
 	
-	/* 拿來測試reminder是否真的新增,刪除 */
-	public void showAllReminder(ContentResolver cr) {
-		Log.i("alarmService", "showAllReminder");
-		
-		Cursor cursor = cr.query(
-				Reminders.CONTENT_URI, REMINDERS_PROJECTION, null, null, null);
-		while (cursor.moveToNext()) {
-			Log.i("alarmService", "    reminder ID:" + String.valueOf(cursor.getInt(1)));
-			Log.i("alarmService", "    reminder time:" + String.valueOf(cursor.getInt(2)));
-		}
-	}
 }

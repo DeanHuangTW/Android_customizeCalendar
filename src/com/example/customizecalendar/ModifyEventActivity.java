@@ -35,6 +35,8 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 	private int[] mAlarmTimeList = {0, 1, 5, 10};
 	private int mAlarmTime = 0;
 	private int mAlarmOriginalTime = 0;
+	private String[] mNotifyWayList = {"Toast", "Vibrator", "Voice"};
+	private String mNotifyWay = "Toast";
 	
 	private int mEventId;
 	private int mStartYear;
@@ -58,6 +60,7 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 	private TextView mTextEndDate;
 	private TextView mTextEndTime;
 	private Spinner mSpinnerAlarm;
+	private Spinner spinner_notifyWay;
 	
 	@Override
 	public void onCreate(Bundle savedInstance) {
@@ -83,6 +86,16 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		mBtnCancel = (Button) findViewById(R.id.btn_cancel);
 		mBtnCancel.setOnClickListener(this);
 		
+		// alarm提醒方式
+		spinner_notifyWay = (Spinner) findViewById(R.id.spinner_notify_way);
+		spinner_notifyWay.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
+            public void onItemSelected(AdapterView adapterView, View view, int position, long id){
+            	mNotifyWay = mNotifyWayList[position];
+            }
+            public void onNothingSelected(AdapterView arg0) {                
+            }
+		});
+		setNotifyWayList();
 		// alarm提醒時間
 		mSpinnerAlarm = (Spinner) findViewById(R.id.spinner_alarm);
 		mSpinnerAlarm.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
@@ -200,8 +213,8 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		// delete alarm
 		if (mAlarmOriginalTime > 0) {
 			Log.v(TAG, "Delete alarm");
-			AlarmService alarm = new AlarmService(mEventId);
-			alarm.cancelAlarm(getContentResolver());
+			AlarmService alarm = new AlarmService(this, mEventId);
+			alarm.cancelAlarm();
 		} else {
 			Log.v(TAG, "This event do not have alarm. Do no need to delete alarm");
 		}
@@ -240,8 +253,8 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		
 		//更新alarm
 		if (mAlarmTime > 0) {
-			AlarmService alarm = new AlarmService(mEventId);
-			alarm.updateAlarm(getContentResolver(), mAlarmTime);
+			AlarmService alarm = new AlarmService(this, mEventId);
+			alarm.updateAlarm(startMillis, mAlarmTime, mNotifyWay);
 		}
 		
 		// 更新結束,回主頁面
@@ -293,19 +306,25 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		mEditDesc.setText(eventDesc);
 		
 		// alarm time
-		AlarmService alarm = new AlarmService(mEventId);
-		Cursor alarmCur = alarm.queryReminders(getContentResolver());
+		AlarmService alarm = new AlarmService(this, mEventId);
+		Cursor alarmCur = alarm.queryAlarmNotify();
 		if (alarmCur.getCount() == 0) {
 			Log.v(TAG, "This event do not have alarm");
 			mAlarmTime = 0;
 			mSpinnerAlarm.setSelection(0);
 		} else {
 			while (alarmCur.moveToNext()) {
-				mAlarmTime = alarmCur.getInt(2);
+				mNotifyWay = alarmCur.getString(1); //提醒方式
+				mAlarmTime = alarmCur.getInt(2);	//提醒時間
 	    	}
 			for (int i=0 ; i < mAlarmTimeList.length; i++) {
 				if (mAlarmTime == mAlarmTimeList[i]) {
 					mSpinnerAlarm.setSelection(i);
+				}
+			}
+			for (int i=0 ; i < mNotifyWayList.length; i++) {
+				if (mNotifyWay.equals(mNotifyWayList[i])) {
+					spinner_notifyWay.setSelection(i);
 				}
 			}
 		}
@@ -313,7 +332,15 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		mAlarmOriginalTime = mAlarmTime;
 		
 	}
-		
+
+	/* 鬧鐘提醒方式選項 */
+	private void setNotifyWayList() {
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+				R.array.reminder_way,
+				android.R.layout.simple_spinner_item);
+        spinner_notifyWay.setAdapter(adapter);
+	}
+	
 	private void setAlarmTimeList() {
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
 				R.array.reminder_time,

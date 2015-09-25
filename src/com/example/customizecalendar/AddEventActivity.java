@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.DatePickerDialog;
-import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -40,6 +38,8 @@ public class AddEventActivity extends Activity implements OnClickListener {
 	
 	private int[] mAlarmTimeList = {0, 1, 5, 10};
 	private int mAlarmTime = 0;
+	private String[] mNotifyWayList = {"Toast", "Vibrator", "Voice"};
+	private String mNotifyWay = "Toast";
 	
 	private Button btnOK;
 	private Button btnCancel;
@@ -51,6 +51,7 @@ public class AddEventActivity extends Activity implements OnClickListener {
 	private TextView end_time;
 	private Spinner calendarName;
 	private Spinner spinner_alarm;
+	private Spinner spinner_notifyWay;
 	
 	// 紀錄事件開始與結束時間
 	private int mStartYear;
@@ -74,7 +75,16 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		editDesc = (EditText) findViewById(R.id.edit_desc);
 		calendarName = (Spinner) findViewById(R.id.calendar_name);	
 		findCalendarList();
-		
+		// alarm提醒方式
+		spinner_notifyWay = (Spinner) findViewById(R.id.spinner_notify_way);
+		spinner_notifyWay.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
+            public void onItemSelected(AdapterView adapterView, View view, int position, long id){
+            	mNotifyWay = mNotifyWayList[position];
+            }
+            public void onNothingSelected(AdapterView arg0) {                
+            }
+		});
+		setNotifyWayList();
 		// alarm提醒時間
 		spinner_alarm = (Spinner) findViewById(R.id.spinner_alarm);
 		spinner_alarm.setOnItemSelectedListener(new Spinner.OnItemSelectedListener(){
@@ -215,8 +225,8 @@ public class AddEventActivity extends Activity implements OnClickListener {
 		long eventID = Long.parseLong(uri.getLastPathSegment());
 		//鬧鐘設置
 		if (mAlarmTime > 0) {
-			AlarmService alarm = new AlarmService(eventID);
-			alarm.setAlarm(getContentResolver(), mAlarmTime);
+			AlarmService alarm = new AlarmService(this ,eventID);
+			alarm.setAlarm(startMillis, mAlarmTime, mNotifyWay);
 		}
 		
 		return eventID;
@@ -245,6 +255,14 @@ public class AddEventActivity extends Activity implements OnClickListener {
         calendarName.setAdapter(adapter);
 	}
 	
+	
+	/* 鬧鐘提醒方式選項 */
+	private void setNotifyWayList() {
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+				R.array.reminder_way,
+				android.R.layout.simple_spinner_item);
+        spinner_notifyWay.setAdapter(adapter);
+	}
 	
 	/* 鬧鐘時間選項 */
 	private void setAlarmTimeList() {

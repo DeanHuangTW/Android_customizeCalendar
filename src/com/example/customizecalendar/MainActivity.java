@@ -48,6 +48,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	private Button mBtnAddEvent;
 	private ListView mEventList;
 	private SimpleAdapter mAdapter;
+	NoteAdapter adapter;
 	//紀錄之前點選的GridView資料
 	private TextView mPrevClickView;
 	private String mPrevColor;
@@ -75,8 +76,8 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		Calendar calendar = getTodayCalendar();		
 		updateEventList(mYearOfToday, mMonthOfToday, mDayOfToday);
 		
-		FillGridCell gridCell = new FillGridCell();
-		NoteAdapter adapter = new NoteAdapter(this, 
+		CalendarGrid gridCell = new CalendarGrid();
+		adapter = new NoteAdapter(this, 
 				gridCell.getGridList(), R.layout.gridcell, new String[]{"dayNum"},
 				new int[]{R.id.num});
 		myCalendarView.setAdapter(adapter);		
@@ -127,8 +128,8 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 	
 	// 月份切換後,更新GridView
 	private void updateGridView(int year, int month) {
-		FillGridCell gridCell = new FillGridCell(year, month);
-		NoteAdapter adapter = new NoteAdapter(this, 
+		CalendarGrid gridCell = new CalendarGrid(year, month);
+		adapter = new NoteAdapter(this, 
 				gridCell.getGridList(), R.layout.gridcell, new String[]{"dayNum"},
 				new int[]{R.id.num});
 		myCalendarView.setAdapter(adapter);
@@ -178,6 +179,8 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 		    item.put("startTime", formatter.format(calendar.getTime()));
 		    list.add(item);
 		}
+		cur.close();
+		
 		mAdapter = new SimpleAdapter(this, 
 				list,
 				android.R.layout.simple_list_item_2,
@@ -274,6 +277,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 				Log.i(TAG, "    Add a new event. ID: " + evenId);
 				
 				updateEventList(mYearOfSelect, mMonthOfSelect, mDayOfToday);
+				adapter.notifyDataSetChanged();  //通知有event增加,GridView上的'E'圖示需要更新
 			}
 		} else if (requestCode == 1) {
 			Log.v(TAG, "back from ModifyEventActivity");
@@ -281,6 +285,7 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 				Log.v(TAG, "    Give up to modify event");
 			} else if (resultCode == RESULT_OK) { // modify or delete an event
 				updateEventList(mYearOfSelect, mMonthOfSelect, mDayOfToday);
+				adapter.notifyDataSetChanged(); //通知有event修改(可能被刪除),GridView上的'E'圖示需要更新
 			}
 		}
 	}

@@ -50,34 +50,36 @@ public final class R {
         public static final int ic_launcher=0x7f020001;
     }
     public static final class id {
-        public static final int action_settings=0x7f0a001c;
+        public static final int action_settings=0x7f0a001e;
         public static final int btn_addEvent=0x7f0a0008;
         public static final int btn_cancel=0x7f0a0001;
         public static final int btn_ok=0x7f0a0000;
         public static final int button_delete=0x7f0a000a;
         public static final int button_modify=0x7f0a000b;
         public static final int buttonlayout=0x7f0a0005;
-        public static final int calendar_name=0x7f0a000e;
+        public static final int calendar_name=0x7f0a0010;
         public static final int date=0x7f0a0002;
-        public static final int edit_desc=0x7f0a0018;
-        public static final int end_date=0x7f0a0015;
-        public static final int end_time=0x7f0a0016;
+        public static final int edit_desc=0x7f0a001a;
+        public static final int end_date=0x7f0a0017;
+        public static final int end_time=0x7f0a0018;
         public static final int eventList=0x7f0a0009;
+        public static final int grid_fill=0x7f0a000c;
+        public static final int icon_event=0x7f0a000e;
         public static final int myCalendar=0x7f0a0004;
         public static final int nextMonth=0x7f0a0007;
-        public static final int num=0x7f0a000c;
+        public static final int num=0x7f0a000d;
         public static final int prevMonth=0x7f0a0006;
-        public static final int spinner_alarm=0x7f0a001b;
-        public static final int spinner_notify_way=0x7f0a001a;
-        public static final int start_date=0x7f0a0012;
-        public static final int start_time=0x7f0a0013;
-        public static final int text_alarm=0x7f0a0019;
-        public static final int text_calendar=0x7f0a000d;
-        public static final int text_desc=0x7f0a0017;
-        public static final int text_endTime=0x7f0a0014;
-        public static final int text_startTime=0x7f0a0011;
-        public static final int text_title=0x7f0a000f;
-        public static final int title=0x7f0a0010;
+        public static final int spinner_alarm=0x7f0a001d;
+        public static final int spinner_notify_way=0x7f0a001c;
+        public static final int start_date=0x7f0a0014;
+        public static final int start_time=0x7f0a0015;
+        public static final int text_alarm=0x7f0a001b;
+        public static final int text_calendar=0x7f0a000f;
+        public static final int text_desc=0x7f0a0019;
+        public static final int text_endTime=0x7f0a0016;
+        public static final int text_startTime=0x7f0a0013;
+        public static final int text_title=0x7f0a0011;
+        public static final int title=0x7f0a0012;
         public static final int weekDay=0x7f0a0003;
     }
     public static final class layout {

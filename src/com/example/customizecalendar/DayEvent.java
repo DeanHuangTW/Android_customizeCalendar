@@ -81,5 +81,15 @@ public class DayEvent {
 		
 		return cur;
 	}
-
+	
+	public Boolean hasEventToday(ContentResolver cr) {
+		Cursor cur = queryTodayEvent(cr);
+		if (cur.getCount() > 0) {
+			cur.close();
+			return true;
+		} else {
+			cur.close();
+			return false;
+		}
+	}
 }

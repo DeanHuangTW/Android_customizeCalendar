@@ -8,7 +8,7 @@ import android.util.Log;
 
 /* 這個class是用來設置要畫在GridView上的日期
  * 根據設置的年與月,來決定每格要填什麼數字 */
-public class FillGridCell {
+public class CalendarGrid {
 	private static final String TAG = "Dean";
 	
 	private int mYear;
@@ -17,13 +17,13 @@ public class FillGridCell {
 	private int daysInMonth;
 	
 	/* 預設今天的年,月 */
-	public FillGridCell() {
+	public CalendarGrid() {
 		Calendar calendar = Calendar.getInstance();
 		mYear = calendar.get(Calendar.YEAR);
 		mMonth = calendar.get(Calendar.MONTH);
 	}
 	/* 自訂年,月 */
-	public FillGridCell(int year, int month) {
+	public CalendarGrid(int year, int month) {
 		this.mYear = year;
 		this.mMonth = month;
 	}

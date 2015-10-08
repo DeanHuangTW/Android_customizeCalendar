@@ -8,14 +8,11 @@ import java.util.HashMap;
 import com.example.customizecalendar.DayEvent;
 
 import android.app.Activity;
-import android.content.ContentUris;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.CalendarContract;
-import android.provider.CalendarContract.Events;
 import android.util.Log;
+import android.util.MonthDisplayHelper;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -122,13 +119,13 @@ public class MainActivity extends Activity implements OnClickListener ,OnItemCli
 			}
 		}
 		Log.i(TAG, "  ===>" + mYearOfToday + "-" + (mMonthOfToday+1));
-		updateGridView(mYearOfToday, mMonthOfToday);
+		updateGridView(mYearOfToday, mMonthOfToday, mDayOfToday);
 		setDateView(mYearOfToday, mMonthOfToday, mDayOfToday);
 	}
 	
 	// 月份切換後,更新GridView
-	private void updateGridView(int year, int month) {
-		CalendarGrid gridCell = new CalendarGrid(year, month);
+	private void updateGridView(int year, int month, int day) {
+		CalendarGrid gridCell = new CalendarGrid(year, month, day);
 		adapter = new NoteAdapter(this, 
 				gridCell.getGridList(), R.layout.gridcell, new String[]{"dayNum"},
 				new int[]{R.id.num});

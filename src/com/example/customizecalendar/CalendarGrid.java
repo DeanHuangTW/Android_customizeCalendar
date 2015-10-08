@@ -13,6 +13,7 @@ public class CalendarGrid {
 	
 	private int mYear;
 	private int mMonth;
+	private int mDay;
 	private static final int DAY_OFFSET = 1;	
 	private int daysInMonth;
 	
@@ -21,16 +22,19 @@ public class CalendarGrid {
 		Calendar calendar = Calendar.getInstance();
 		mYear = calendar.get(Calendar.YEAR);
 		mMonth = calendar.get(Calendar.MONTH);
+		mDay = calendar.get(Calendar.DAY_OF_MONTH);
 	}
 	/* 自訂年,月 */
-	public CalendarGrid(int year, int month) {
+	public CalendarGrid(int year, int month, int day) {
 		this.mYear = year;
 		this.mMonth = month;
+		this.mDay = day;
 	}
 	
-	public void setDate(int year, int month) {
+	public void setDate(int year, int month, int day) {
 		this.mYear = year;
 		this.mMonth = month;
+		this.mDay = day;
 	}
 	
 	public ArrayList<HashMap<String, String>> getGridList() {
@@ -99,7 +103,7 @@ public class CalendarGrid {
 			item.put("dayNum", String.valueOf(i));
 			item.put("year", String.valueOf(mYear));
 			item.put("month", String.valueOf(mMonth));
-			if (i == today) {
+			if (i == mDay) {
 				item.put("color", "Blue");  //今天的字體是藍色
 			} else {
 				item.put("color", "Black");  //本月其它天是黑色字體

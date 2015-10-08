@@ -273,7 +273,7 @@ public class ModifyEventActivity extends Activity implements OnClickListener {
 		String eventTitle = "";
 		String eventDesc = "";
 		mEventId = bundle.getInt("eventID");
-		Cursor cur = DayEvent.queryEvntById(getContentResolver(), mEventId);            	
+		Cursor cur = DayEvent.queryEventById(getContentResolver(), mEventId);            	
     	while (cur.moveToNext()) { // Only one data
     		endTimeInMills = cur.getLong(DayEvent.PROJ_END_INDEX);
     		beginTimeInMills = cur.getLong(DayEvent.PROJ_BEGIN_INDEX);

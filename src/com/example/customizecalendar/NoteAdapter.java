@@ -25,9 +25,9 @@ public class NoteAdapter extends SimpleAdapter{
 	public View getView(int position, View convertView, ViewGroup parent) {
 		// 取得TextView
 		convertView = LayoutInflater.from(context).inflate(R.layout.gridcell, null);
+		HashMap<String, String> theMap = (HashMap<String, String>)getItem(position);
 		// 設置日期格式
 		TextView txtNote = (TextView)convertView.findViewById(R.id.num);		
-		HashMap<String, String> theMap = (HashMap<String, String>)getItem(position);
 		setTextColor(txtNote, theMap.get("color").toString() , position);
 		txtNote.setText(theMap.get("dayNum").toString());
 		txtNote.setTextSize(20);			

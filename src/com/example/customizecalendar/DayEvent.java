@@ -49,8 +49,7 @@ public class DayEvent {
 	}
 	
 	// According to eventID, query event's data
-	public static Cursor queryEvntById(ContentResolver cr, int eventId) {
-		Log.i(TAG, "queryEvntById. id :"+ eventId);
+	public static Cursor queryEventById(ContentResolver cr, int eventId) {
 		Cursor cur = null;
 		
 		Uri uri = ContentUris.withAppendedId(Events.CONTENT_URI, eventId);
@@ -62,7 +61,6 @@ public class DayEvent {
 
 	// query today's event
 	public Cursor queryTodayEvent(ContentResolver cr) {
-		Log.i(TAG, "Query event " + mYear + "/" + (mMonth + 1) + "/" + mDay);
 		Calendar beginTime = Calendar.getInstance();
 		beginTime.set(mYear, mMonth, mDay, 0, 0);
 		long startMillis = beginTime.getTimeInMillis();
